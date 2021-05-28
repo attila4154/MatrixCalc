@@ -1,0 +1,7 @@
+- keep matrices as shared pointers!!!
+- change float to matrix
+- tokenClass: add virtual "value" function!!!
+- add "better" ecxeptions
+- add "better control" everywhere possible
+- add SparseMatrix Class and change all main matrix functions
+- change matrix multiplication to strassen's alg.
