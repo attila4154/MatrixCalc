@@ -44,7 +44,7 @@ void   CApplication::ReadSize    (std::istream & in, int & m, int & n) {
     }
 }
 //----------------------------------------------------------------------
-void CApplication::ReadMatrix (std::istream & in, shared_ptr<CDense> matrix) {
+void CApplication::ReadMatrix (std::istream & in, MPtr & matrix, int m, int n) {
     std::string buff;
     try {
         getline (in, buff);
@@ -52,6 +52,8 @@ void CApplication::ReadMatrix (std::istream & in, shared_ptr<CDense> matrix) {
         throw exit_exc();
     }
     std::istringstream is (buff);
+    matrix = make_shared <CDense> (m,n);
+    //for now matrix will be pointer to CDense, change it so that it was optional???
     if (!(is >> *matrix)) throw exit_exc();
     if (is.rdbuf()->in_avail() != 0) throw exit_exc();
 }
@@ -113,8 +115,8 @@ void CApplication::Scan (std::istream & in){
     string varName = ReadVar (in);
     int m, n;
     ReadSize (in, m, n);
-    shared_ptr<CDense> matrix = make_shared<CDense>(m,n);
-    ReadMatrix (std::cin, matrix);
+    shared_ptr<CMatrix> matrix;
+    ReadMatrix (std::cin, matrix, m, n);
     shared_ptr <CExpr> expr = make_shared<CExpr> (matrix);
     matrices.emplace (varName, expr);
 }
@@ -124,6 +126,7 @@ void CApplication::ReadExpr(std::istream & in){
     string varName = ReadVar(in);
     expression->ReadExpr(in, matrices);
     matrices.emplace (varName, expression);
+    cout << "variable is " << varName  << endl;
     // try {
     //     expression->Evaluate(matrices);
     // } catch (variable_not_set & var) {
@@ -134,8 +137,10 @@ void CApplication::ReadExpr(std::istream & in){
 void CApplication::Evaluate (std::istream & in) {
     string varName = ReadVar(in);
     if (matrices.find(varName) == matrices.end())
-        throw (wrong_command ("variable not set"));
-    cout << matrices.find(varName)->second->Evaluate(matrices) << endl;
+        throw (wrong_command ("variable not set\n"));
+    auto p = matrices.find(varName)->second->Evaluate(matrices);
+    cout << *p << endl;
+    delete p;
 }
 //----------------------------------------------------------------------
 void CApplication::Run () {

@@ -11,9 +11,9 @@ using namespace std;
 class CExpr {
   public:
     CExpr () = default;
-    CExpr (shared_ptr<CDense> matrix);
+    CExpr (shared_ptr<CMatrix> matrix);
     void   ReadExpr (istream & in, CMemory & matrices);
-    CDense Evaluate(CMemory & matrices);
+    CMatrix * Evaluate(CMemory & matrices);
     shared_ptr<Token> GetMatrix ();
     friend std::ostream & operator << (std::ostream & out, const CExpr & expr);
     

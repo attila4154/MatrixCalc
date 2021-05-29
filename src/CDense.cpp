@@ -1,17 +1,17 @@
 #pragma once
 
 // #include "../lib/CDense.h"
-CDense::CDense               (int m, int n) : m_m(m), m_n(n) {
+CDense::CDense               (int m, int n) : CMatrix (m,n) {
     m_matrix.resize(m);
     m_matrix.reserve(m);
     // for (int i = 0; i < m_m; i++)
     //     m_matrix[i].reserve(m_n);
 }
-CDense::CDense               () : m_m(0), m_n(0) {
+CDense::CDense               () : CMatrix (0,0) {
     // m_matrix.resize(m_m);
     // m_matrix.reserve(m_m);
 }
-CDense::CDense (const CDense & other) : m_m(other.m_m), m_n(other.m_n) {
+CDense::CDense (const CDense & other) : CMatrix (other.m_m, other.m_n) {
     m_matrix.resize(m_m);
     m_matrix.reserve(m_m);
     for (int i = 0; i < m_m; ++i) {
@@ -34,9 +34,27 @@ bool CDense::NotSet          (void) const {
     return m_n == 0;
 }
 
-std::shared_ptr<CDense> CDense::operator + (const CDense & other) const {
+DensePtr operator + (const CDense & left, const CDense & right) {
+    if (! (left.m_n == right.m_n && left.m_m == right.m_m)) throw WrongFormat();
+    std::shared_ptr<CDense> temp = std::make_shared<CDense>(right.m_m, right.m_n);
+    for (int i = 0; i < temp->m_m; i++) {
+        temp->m_matrix[i].resize(temp->m_n);
+        temp->m_matrix[i].reserve(temp->m_n);
+    }
+    for (int i = 0; i < left.m_m; ++i) {
+        for (int j = 0; j < left.m_n; j++)  
+        {
+            temp ->m_matrix[i][j] =
+            left  .m_matrix[i][j] +
+            right .m_matrix[i][j]; 
+        }
+    } 
+    return temp;
+}
+
+std::shared_ptr<CDense> CDense::operator - (const CDense & other) const {
     if (! (m_n == other.m_n && m_m == other.m_m)) throw WrongFormat();
-    std::shared_ptr<CDense> temp = std::make_shared<CDense>(other.m_m, other.m_n);
+    std::shared_ptr<CDense> temp = std::make_shared<CDense> (other.m_m, other.m_n);
     for (int i = 0; i < temp->m_m; i++) {
         temp->m_matrix[i].resize(temp->m_n);
         temp->m_matrix[i].reserve(temp->m_n);
@@ -44,55 +62,36 @@ std::shared_ptr<CDense> CDense::operator + (const CDense & other) const {
     for (int i = 0; i < m_m; ++i) {
         for (int j = 0; j < m_n; j++)  
         {
-            temp->m_matrix[i][j] =
-            m_matrix[i][j] +
-            other.m_matrix[i][j]; 
+            temp->m_matrix[i][j] = m_matrix[i][j] - other.m_matrix[i][j]; 
         }
     } 
 
     return temp;
 }
 
-CDense CDense::operator - (const CDense & other) const {
-    if (! (m_n == other.m_n && m_m == other.m_m)) throw WrongFormat();
-    CDense temp(other.m_m, other.m_n);
-    for (int i = 0; i < temp.m_m; i++) {
-        temp.m_matrix[i].resize(temp.m_n);
-        temp.m_matrix[i].reserve(temp.m_n);
-    }
-    for (int i = 0; i < m_m; ++i) {
-        for (int j = 0; j < m_n; j++)  
-        {
-            temp.m_matrix[i][j] = m_matrix[i][j] - other.m_matrix[i][j]; 
-        }
-    } 
+// shared_ptr<CDense> operator * (float alpha, const CDense & matrix){
+//     shared_ptr<CDense> temp = make_shared<CDense> (matrix.m_m, matrix.m_n);
+//     for (int i = 0; i < temp.m_m; i++) {
+//         temp.m_matrix[i].resize(temp.m_n);
+//         temp.m_matrix[i].reserve(temp.m_n);
+//     }
+//     for (int i = 0; i < matrix.m_m; ++i) {
+//         for (int j = 0; j < matrix.m_n; j++)  
+//         {
+//             temp.m_matrix[i][j] = matrix.m_matrix[i][j] * alpha;
+//         }
+//     } 
 
-    return temp;
-}
+//     return temp;
+// }
 
-CDense operator * (float alpha, const CDense & matrix){
-    CDense temp(matrix.m_m, matrix.m_n);
-    for (int i = 0; i < temp.m_m; i++) {
-        temp.m_matrix[i].resize(temp.m_n);
-        temp.m_matrix[i].reserve(temp.m_n);
-    }
-    for (int i = 0; i < matrix.m_m; ++i) {
-        for (int j = 0; j < matrix.m_n; j++)  
-        {
-            temp.m_matrix[i][j] = matrix.m_matrix[i][j] * alpha;
-        }
-    } 
-
-    return temp;
-}
-
-CDense operator * (const CDense & left, const CDense & right) {
-    if (left.m_n != right.m_m) throw WrongFormat ();
-    CDense temp (left.m_m, right.m_n);
+// shared_ptr<CDense> operator * (const CDense & left, const CDense & right) {
+//     if (left.m_n != right.m_m) throw WrongFormat ();
+//     shared_ptr<CDense> temp = make_shared <CDense> (left.m_m, right.m_n);
     
 
-    return temp;
-}
+//     return temp;
+// }
 
 
 void CDense::Print(std::ostream & out) const {
@@ -105,36 +104,55 @@ void CDense::Print(std::ostream & out) const {
     } 
 }
 
-std::ostream & operator << (std::ostream & out, const CDense & matrix) {
-    matrix.Print(out);
-    return out;
-}
-
-std::istream & operator >> (std::istream & in, CDense & matrix) {
+void CDense::Read (std::istream & in) {
     std::string str;
     getline (in, str, ']');
     // str += ']';
     std::stringstream is;
     is << str;
-    if (matrix.m_n == 0) {
-        matrix.FindSize (str);
+    if (m_n == 0) {
+        FindSize (str);
     }
     
     char character;
     double temp;
     is >> character; if (character != '[') throw WrongFormat();
-    for (long i = 0; i < matrix.m_m; ++i) {
-        for (long j = 0; j < matrix.m_n; j++)  
+    for (long i = 0; i < m_m; ++i) {
+        for (long j = 0; j < m_n; j++)  
         {
             if (!( is >> temp)) throw WrongDimensions();
-            matrix.m_matrix[i].push_back(temp);  
+            m_matrix[i].push_back(temp);  
         }
-        if (i != matrix.m_m - 1 && ( (! (is >> character) || character != ';')))
+        if (i != m_m - 1 && ( (! (is >> character) || character != ';')))
             throw WrongFormat();
     } 
-    // is >> character; if (character != ']') throw WrongDimensions();
-    return in;
 }
+
+// std::istream & operator >> (std::istream & in, CDense & matrix) {
+//     std::string str;
+//     getline (in, str, ']');
+//     // str += ']';
+//     std::stringstream is;
+//     is << str;
+//     if (matrix.m_n == 0) {
+//         matrix.FindSize (str);
+//     }
+    
+//     char character;
+//     double temp;
+//     is >> character; if (character != '[') throw WrongFormat();
+//     for (long i = 0; i < matrix.m_m; ++i) {
+//         for (long j = 0; j < matrix.m_n; j++)  
+//         {
+//             if (!( is >> temp)) throw WrongDimensions();
+//             matrix.m_matrix[i].push_back(temp);  
+//         }
+//         if (i != matrix.m_m - 1 && ( (! (is >> character) || character != ';')))
+//             throw WrongFormat();
+//     } 
+//     // is >> character; if (character != ']') throw WrongDimensions();
+//     return in;
+// }
 
 void CDense::FindSize (std::string & src) {
     std::istringstream is (src);
@@ -163,7 +181,10 @@ void CDense::FindSize (std::string & src) {
     m_matrix.reserve(m_m);
 }
 
+CMatrix * CDense::Clone () {
+    // CDense temp (*this);
+    return new CDense (*this);
+}
 
-     
 
 CDense::~CDense () {}

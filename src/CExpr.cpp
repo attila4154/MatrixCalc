@@ -10,7 +10,7 @@ bool isChar (char c) {
     return ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) );
 }
 //----------------------------------------------------------------
-CExpr::CExpr (shared_ptr<CDense> matrix) {
+CExpr::CExpr (shared_ptr<CMatrix> matrix) {
     tokens.push_back (make_shared<MatrixToken> (matrix));
 }
 shared_ptr<Token> CExpr::GetMatrix () { 
@@ -28,9 +28,8 @@ void CExpr::ParseExpr (istream & in, CMemory & matrices) {
         else if (c == '(' || c == ')') token = make_shared<Brackets> (c);
         else if (c == '[') {
             in.putback(c);
-            CDense matrix;
-            in >> matrix;
-            // cout << "value is " << matrix << endl;
+            shared_ptr<CMatrix> matrix = make_shared<CDense> ();
+            in >> *matrix;
             token = make_shared<MatrixToken> (matrix);
         }
         else if (isNumber(c)) {
@@ -60,7 +59,7 @@ void   CExpr::ReadExpr (istream & in, CMemory & matrices) {
     char temp;
     if (!(in >> temp) 
     || temp != '=') throw WrongFormat();
-    ParseExpr (in, matrices);
+    ParseExpr (in, matrices);   
     TurnToRPN ();
 }
 //---------------------------------------------------------
@@ -123,10 +122,11 @@ void CExpr::TurnToRPN (void) {
     tokens = RPNExpr;
 }
 //----------------------------------------------------------------
-CDense CExpr::Evaluate (CMemory & matrices) {
+CMatrix * CExpr::Evaluate (CMemory & matrices) {
     stack <shared_ptr<Token>> opStack;
+    cout << "the  " << endl;
     for (auto i = tokens.begin(); i != tokens.end(); ++i) {
-      //if token is variable and it doesn't have value yet, try to find it 
+    //   if token is variable and it doesn't have value yet, try to find it 
         if ((*i)->GetType() == Token::TokenType::Variable 
          && (*i)->Value() == nullptr) {
             shared_ptr<Variable> tempVar = dynamic_pointer_cast<Variable>(*i);
@@ -149,8 +149,14 @@ CDense CExpr::Evaluate (CMemory & matrices) {
             opStack.push((dynamic_pointer_cast<Operator>(*i))->Calculate(topFirst, topSecond));
         }
     }
-    if (opStack.size() == 1) return 
-    *(opStack.top())->Value();
+    // auto t = *dynamic_cast<CDense*>(opStack.top()->Value());
+    // cout << t;
+    // if (opStack.size() == 1) return *dynamic_cast<CDense*>(opStack.top()->Value()
+    if (opStack.size() == 1) 
+        {
+            // auto p = opStack.top()->Value();
+            return opStack.top()->Value()->Clone();
+        }
     throw wrong_command("too many values");
 }
 //----------------------------------------------------------------

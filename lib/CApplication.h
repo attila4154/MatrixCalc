@@ -4,6 +4,8 @@
 #include "../src/CToken.cpp"
 #include "../src/CExpr.cpp"
 #include "CDense.h"
+#include "CMatrix.h"
+#include "../src/CMatrix.cpp"
 #include "CExceptions.h"
 #include "../src/CDense.cpp"
 #include "define.h"
@@ -28,7 +30,7 @@ class CApplication {
     void        Run         ();
     int         GetCommand  (std::istream & in);
     std::string ReadVar     (std::istream & in);
-    void        ReadMatrix  (std::istream & in, std::shared_ptr<CDense> matrix);
+    void        ReadMatrix  (std::istream & in, MPtr & matrix, int m, int n);
     void        ReadSize    (std::istream & in, int & m, int & n);
     void        Execute     (std::istream & in, CMemory & matrices);
     // void        ReadCommand (std::istream & in, CMemory & matrices);
