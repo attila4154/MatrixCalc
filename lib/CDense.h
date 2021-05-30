@@ -1,8 +1,6 @@
 #pragma once
 
-// #include "CSparse.h"
 #include "CMatrix.h"
-#include "CExceptions.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -11,20 +9,21 @@
 #define DensePtr std::shared_ptr<CDense>
 
 class CDense : public CMatrix {
-public:
+  public:
     CDense               ();
     CDense               (int m, int n);
     CDense               (const CDense & other);
     CDense & operator =    (const CDense & other);
-    // CDense operator +    (const CDense & other) const;
-    // std::shared_ptr<CDense> operator + (const CDense & other) const;
-    // std::shared_ptr<CDense> operator + (const CDense & other) const;
+
     friend DensePtr operator + (const CDense & left, const CDense & right); 
     void FindSize        (std::string & src);
     std::shared_ptr<CDense> operator - (const CDense & other) const;
     bool NotSet          (void) const;
     friend std::shared_ptr<CDense> operator * (const CDense & left, const CDense & right);
     CMatrix * Clone ();
+    float GetCoord (int m, int n) const ;
+    void  SetCoord (float value, int m, int n) ;
+
     // CMatrix & operator * (const CMatrix & other) const;
     // friend CDense operator * (float alpha, const CDense & matrix);
     // CMatrix & Split      (int m, int n);

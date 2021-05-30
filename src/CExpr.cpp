@@ -28,8 +28,8 @@ void CExpr::ParseExpr (istream & in, CMemory & matrices) {
         else if (c == '(' || c == ')') token = make_shared<Brackets> (c);
         else if (c == '[') {
             in.putback(c);
-            shared_ptr<CMatrix> matrix = make_shared<CDense> ();
-            in >> *matrix;
+            shared_ptr<CMatrix> matrix;
+            in >> matrix;
             token = make_shared<MatrixToken> (matrix);
         }
         else if (isNumber(c)) {
@@ -124,7 +124,6 @@ void CExpr::TurnToRPN (void) {
 //----------------------------------------------------------------
 CMatrix * CExpr::Evaluate (CMemory & matrices) {
     stack <shared_ptr<Token>> opStack;
-    cout << "the  " << endl;
     for (auto i = tokens.begin(); i != tokens.end(); ++i) {
     //   if token is variable and it doesn't have value yet, try to find it 
         if ((*i)->GetType() == Token::TokenType::Variable 

@@ -4,10 +4,12 @@
 #include "../src/CToken.cpp"
 #include "../src/CExpr.cpp"
 #include "CDense.h"
+#include "CSparse.h"
 #include "CMatrix.h"
 #include "../src/CMatrix.cpp"
 #include "CExceptions.h"
 #include "../src/CDense.cpp"
+#include "../src/CSparse.cpp"
 #include "define.h"
 
 #include <iostream>

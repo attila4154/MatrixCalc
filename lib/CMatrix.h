@@ -1,29 +1,38 @@
 #pragma once
-#include "CDense.h"
+// #include "CDense.h"
+// #include "CSparse.h"
 // #include "../src/CMatrix.cpp"
+#include "CExceptions.h"
 #include <iostream>
+#include <sstream>
 #include <memory>
 
 #define MPtr std::shared_ptr<CMatrix>
+bool ShouldBeDense (const std::string & src);
 
+// class CDense ;
+// class CSparse;
 class CMatrix {
   public:
     CMatrix (int m, int n);
     CMatrix () = default;
     virtual CMatrix * Clone () = 0;
-
-    // friend MPtr operator +(const CMatrix & left, const CMatrix & right);
-    friend MPtr operator +(const CMatrix & left, const CMatrix & right);
-    friend MPtr operator -(const CMatrix & left, const CMatrix & right);
-    // friend MPtr operator *(const CMatrix & left,
-    //                        const CMatrix & right);
-    // virtual float GetCoord (int m, int n) = 0;
-    virtual void Print (std::ostream & out) const = 0;
-    virtual void Read  (std::istream & in ) = 0;
-
+    friend MPtr operator + (const CMatrix & left, const CMatrix & right);
+    friend MPtr operator - (const CMatrix & left, const CMatrix & right);
+    friend MPtr operator *(const CMatrix & left, const CMatrix & right);
+    virtual float GetCoord (int m, int n) const = 0;
+    virtual void  SetCoord (float value, int m, int n) = 0;
+    virtual void Print     (std::ostream & out) const = 0;
+    void         ReadSize  (std::string & src );
+    virtual void Read      (std::istream & in ) = 0;
+    bool IsSet () const;
+    friend bool ProductShouldBeDense (const CMatrix & left, const CMatrix & right, char op);
+    friend int CountSum (const CMatrix & left, const CMatrix & right, char op);
+    friend int CountProduct (const CMatrix & left, const CMatrix & right);
+    
 
     friend std::istream & operator >>
-     (std::istream & in, CMatrix & matrix);
+     (std::istream & in, std::shared_ptr<CMatrix> & matrix);
     friend std::ostream & operator << 
      (std::ostream & out, const CMatrix & matrix);
 

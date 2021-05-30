@@ -52,9 +52,14 @@ void CApplication::ReadMatrix (std::istream & in, MPtr & matrix, int m, int n) {
         throw exit_exc();
     }
     std::istringstream is (buff);
-    matrix = make_shared <CDense> (m,n);
+
+    if (ShouldBeDense (buff) ) {
+        matrix = make_shared <CDense>  (m,n);
+    } else ;
+        // matrix = make_shared <CSparse> (m,n);
+
     //for now matrix will be pointer to CDense, change it so that it was optional???
-    if (!(is >> *matrix)) throw exit_exc();
+    if (!(is >> matrix)) throw exit_exc();
     if (is.rdbuf()->in_avail() != 0) throw exit_exc();
 }
 //----------------------------------------------------------------------

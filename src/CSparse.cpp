@@ -1,30 +1,67 @@
-#pragma once
-
 #include "../lib/CSparse.h"
 
-class CSparse : public CMatrix {
-public:
-    CSparse              ();
-    CSparse              (int m, int n);
-    CSparse              (const std::string & src);
-    CMatrix & operator + (const CMatrix & other) const;
-    CMatrix & operator - (const CMatrix & other) const;
-    CMatrix & operator * (const CMatrix & other) const;
-    CMatrix & operator * (float alpha);
-    CMatrix & Split      (int m, int n);
-    CMatrix & Merge      (const CMatrix & other) const;
-    CMatrix & Transpose  ();
-    CMatrix & Inverse    ();
-    CMatrix & GEM       ();
-    int       Rank () const;
-    float     Determinant () const;
+//===========================================
+CSparse::CSparse () : CMatrix (0,0) {
+}
+//-------------------------------------------
+CSparse::CSparse (int m, int n) : CMatrix (m, n) {}
+//-------------------------------------------
+CSparse::CSparse (const CSparse & other) : CMatrix (other.m_m, other.m_n) {
+    m_matrix = other.m_matrix; 
+}
+//-------------------------------------------
+CMatrix * CSparse::Clone () {
+    return new CSparse (*this);
+}
+//-------------------------------------------
 
-
-    friend void GEM         (const CMatrix & matrix);
-//    friend void GEM_comment (const CMatrix & matrix);
-    void Print(std::ostream & out) const;
-    virtual ~CSparse();
-//-----------------------------------------------------------------
-  private:
-    //neco tady urcite bude...
-};
+//-------------------------------------------
+float CSparse::GetCoord (int m, int n) const {
+    /* check if sparse matrix contains elements under coords (m,n),
+       if no, return 0, else return value (m,n); 
+    */
+    if (m > m_m || n > m_n) throw WrongDimensions ();
+    for (int i = 0; i < m_matrix.size(); i++) {
+        if (m_matrix.find (std::pair<int,int>(m,n)) != m_matrix.end() )
+            return m_matrix.find (std::pair<int,int>(m,n))->second;
+   }
+   return 0;
+}
+//-------------------------------------------
+void  CSparse::SetCoord (float value, int m, int n) {
+    if (m > m_m || n > m_n) throw WrongDimensions ();
+    if (value == 0) return;
+    m_matrix.emplace (std::pair<int,int>(m, n), value);
+}
+//-------------------------------------------
+void CSparse::Print (std::ostream & out) const {
+    for (int i = 0; i < m_m; i++ ) {
+        for (int j = 0; j < m_n; j++) {
+            if (!j) out << '(';
+            out << GetCoord (i,j);
+            if (j != m_n - 1) out << ' ';
+            else out << ')';
+        }
+        if (i != m_m - 1)
+            out <<  std::endl;
+    }
+    out << "(sparse)";
+}
+//-------------------------------------------
+void CSparse::Read  (std::istream & in ) {
+    char character;
+    double value;
+    in >> character; if (character != '[') throw WrongFormat();
+    for (long i = 0; i < m_m; ++i) {
+        for (long j = 0; j < m_n; j++)  
+        {
+            if (!( in >> value)) throw WrongDimensions();
+            SetCoord (value, i, j);  
+        }
+        if (i != m_m - 1 && ( (! (in >> character) || character != ';')))
+            throw WrongFormat();
+    } 
+}
+//-------------------------------------------
+CSparse::~CSparse () {}
+//-------------------------------------------
