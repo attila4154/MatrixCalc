@@ -34,6 +34,18 @@ void  CSparse::SetCoord (float value, int m, int n) {
     m_matrix.emplace (std::pair<int,int>(m, n), value);
 }
 //-------------------------------------------
+void CSparse::Transpose () {
+    std::map<std::pair<int,int>, float> transposed;
+
+    for (auto & v : m_matrix) {
+        transposed.emplace (std::pair<int,int> (v.first.second, v.first.first), v.second);
+    }
+    m_matrix = transposed;
+    int temp = m_n;
+    m_n = m_m;
+    m_m = temp; 
+}
+//-------------------------------------------
 void CSparse::Print (std::ostream & out) const {
     for (int i = 0; i < m_m; i++ ) {
         for (int j = 0; j < m_n; j++) {

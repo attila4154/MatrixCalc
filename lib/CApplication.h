@@ -21,8 +21,10 @@ enum commands {
     PRINT = 0,
     SCAN,
     GEM,
+    TRANSPOSE,
     READEXPR,
     EVALUATE,
+    INVERSE,
     WRONG_COM,
     EXIT
 };
@@ -43,6 +45,7 @@ class CApplication {
     void Scan     (std::istream & in);
     void ReadExpr (std::istream & in);
     void Evaluate (std::istream & in);
+    void Transpose(std::istream & in);
     
     CMemory matrices;
 };

@@ -14,11 +14,14 @@ class CSparse : public CMatrix {
     CSparse (const CSparse & other);
     CMatrix * Clone ();
 
+    void Transpose ();
+
     float GetCoord (int m, int n) const ;
     void  SetCoord (float value, int m, int n) ;
 
     void Print (std::ostream & out) const ;
     void Read  (std::istream & in ) ;
+
 
     ~CSparse ();
 

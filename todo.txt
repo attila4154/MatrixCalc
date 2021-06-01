@@ -1,7 +1,13 @@
-- keep matrices as shared pointers!!!
+- (done) keep matrices as shared pointers!!!
 - change float to matrix
-- tokenClass: add virtual "value" function!!!
+- (done) tokenClass: add virtual "value" function!!!
 - add "better" ecxeptions
 - add "better control" everywhere possible
-- add SparseMatrix Class and change all main matrix functions
+- (done) add SparseMatrix Class and change all main matrix functions
+- (done) add transpose command
+- add transpose function (not necessary)
+- add inverse command for square matrix
+- merge split commands
+- determinant, rank commands
+- gem command (yeah boy) 
 - change matrix multiplication to strassen's alg.

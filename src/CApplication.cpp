@@ -10,10 +10,13 @@ int CApplication::GetCommand (std::istream & in) {
     if (command == "GEM"  || command == "gem")   return commands::GEM;
     if (command == "SCAN" || command == "scan")  return commands::SCAN;
     if (command == "EXIT" || command == "exit")  return commands::EXIT;
+    if (command == "TRANSPOSE" || command == "transpose")  return commands::TRANSPOSE;
     if (command == "evaluate" || command == "EVALUATE")  return commands::EVALUATE;
     else {
         char temp;
-        if (!(in >> temp) || temp != '=') throw wrong_command(); 
+        if (!(in >> temp) || temp != '=') {   
+            throw wrong_command();
+        } 
         in.putback (temp);
         in.putback (' ');
         in.putback ((command.data())[0]);
@@ -94,10 +97,14 @@ void CApplication::Execute (std::istream & in,
             Evaluate (is);
             break;
         }
+        case commands::TRANSPOSE : {
+            Transpose (is);
+            break;
+        }
         case commands::EXIT : 
             throw exit_exc();
         default:
-            throw wrong_command();
+            throw wrong_command(str);
     }
 }
 //----------------------------------------------------------------------
@@ -123,6 +130,10 @@ void CApplication::Scan (std::istream & in){
     shared_ptr<CMatrix> matrix;
     ReadMatrix (std::cin, matrix, m, n);
     shared_ptr <CExpr> expr = make_shared<CExpr> (matrix);
+    if (matrices.find (varName) != matrices.end() ) {
+        std::cout << "variable " << varName << " was rewritten" << std::endl;
+        matrices.erase (varName);
+    }
     matrices.emplace (varName, expr);
 }
 //----------------------------------------------------------------------
@@ -130,22 +141,36 @@ void CApplication::ReadExpr(std::istream & in){
     shared_ptr<CExpr> expression = make_shared<CExpr> ();
     string varName = ReadVar(in);
     expression->ReadExpr(in, matrices);
+    if (matrices.find (varName) != matrices.end() ) {
+        std::cout << "variable " << varName << " was rewritten" << std::endl;
+        matrices.erase (varName);
+    }
     matrices.emplace (varName, expression);
     cout << "variable is " << varName  << endl;
-    // try {
-    //     expression->Evaluate(matrices);
-    // } catch (variable_not_set & var) {
-    //     ;
-    // }
 }
 //----------------------------------------------------------------------
 void CApplication::Evaluate (std::istream & in) {
     string varName = ReadVar(in);
     if (matrices.find(varName) == matrices.end())
         throw (wrong_command ("variable not set\n"));
-    auto p = matrices.find(varName)->second->Evaluate(matrices);
+    
+    auto p = (matrices.find(varName)->second->Evaluate(matrices));
+    // matrices.erase (varName);
+    // shared_ptr<CExpr> expr = make_shared <CExpr>(p);
+    // matrices.emplace (varName, expr);   
     cout << *p << endl;
     delete p;
+}
+//----------------------------------------------------------------------
+void CApplication::Transpose(std::istream & in) {
+    string varName = ReadVar(in);
+        if (matrices.count(varName) == 0)
+            std::cout << "variable " << varName << " does not exist" 
+                                                       << std::endl;
+        else {
+            std::cout << varName << " was transposed\n";
+            (matrices.find(varName)->second)->Transpose();
+        }
 }
 //----------------------------------------------------------------------
 void CApplication::Run () {
@@ -158,7 +183,8 @@ void CApplication::Run () {
             break;
         }
         catch (wrong_command & e) {
-            std::cout << e.what();
+            // std::cout << e.what();
+            e.Print (std::cout);
         }
         catch (WrongFormat & wf) {
             std::cout << wf.what();
@@ -166,6 +192,9 @@ void CApplication::Run () {
         catch (WrongDimensions & wf) {
             std::cout << wf.what();
         } 
+        catch (variable_not_set & var) {
+            std::cout << var.what ();
+        }
     }
 }
 //======================================================================

@@ -7,7 +7,7 @@ CDense::CDense               (int m, int n) : CMatrix (m,n) {
     m_matrix.resize(m);
     m_matrix.reserve(m);
     for (int i = 0; i < m_m; i++)
-        m_matrix[i].reserve(m_n);
+        m_matrix[i].resize(m_n);
 }
 //-----------------------------------------------------------------------
 CDense::CDense               () : CMatrix (0,0) {
@@ -45,6 +45,23 @@ void  CDense::SetCoord (float value, int m, int n) {
     m_matrix[m][n] = value;
 }
 //-----------------------------------------------------------------------
+void CDense::Transpose () {
+    std::vector<std::vector <float>> temp;
+    temp.resize(m_n);
+    for (int i = 0; i < m_n; i++) 
+        temp[i].resize (m_m);
+
+    for (int i = 0; i < m_m; i++) {
+        for (int j = 0; j < m_n; j++) {
+            temp[j][i] = m_matrix [i][j];
+        }
+    }
+    m_matrix = temp;
+    int tempN = m_n;
+    m_n = m_m;
+    m_m = tempN;
+}
+//-----------------------------------------------------------------------
 DensePtr operator + (const CDense & left, const CDense & right) {
     if (! (left.m_n == right.m_n && left.m_m == right.m_m)) throw WrongFormat();
     std::shared_ptr<CDense> temp = std::make_shared<CDense>(right.m_m, right.m_n);
@@ -61,6 +78,7 @@ DensePtr operator + (const CDense & left, const CDense & right) {
         }
     } 
     return temp;
+//-----------------------------------------------------------------------
 }
 //-----------------------------------------------------------------------
 std::shared_ptr<CDense> CDense::operator - (const CDense & other) const {

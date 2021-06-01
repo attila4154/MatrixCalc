@@ -28,6 +28,7 @@ class Token {
     int           GetType        (void)               const;
     virtual void  Print          (std::ostream & out) const = 0; 
     virtual CMatrix * Value (void);
+    virtual void Transpose ();
     friend std::ostream & operator << (std::ostream & out, const Token & t);
   protected:
     int type = TokenType::Nothing;
@@ -40,6 +41,7 @@ class MatrixToken : public Token {
     CMatrix * Value (void) override;
     std::shared_ptr<CMatrix> SharedValue ();
     void Print (std::ostream & out) const;
+    void Transpose () override;
     ~MatrixToken () {}
   private:
     std::shared_ptr<CMatrix> matrix;

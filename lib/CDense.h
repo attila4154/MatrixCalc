@@ -24,6 +24,8 @@ class CDense : public CMatrix {
     float GetCoord (int m, int n) const ;
     void  SetCoord (float value, int m, int n) ;
 
+    void Transpose ();
+
     // CMatrix & operator * (const CMatrix & other) const;
     // friend CDense operator * (float alpha, const CDense & matrix);
     // CMatrix & Split      (int m, int n);
