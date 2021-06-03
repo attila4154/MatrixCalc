@@ -14,10 +14,13 @@ class CSparse : public CMatrix {
     CSparse (const CSparse & other);
     CMatrix * Clone ();
 
-    void Transpose ();
+    MPtr Transpose ();
 
     float GetCoord (int m, int n) const ;
     void  SetCoord (float value, int m, int n) ;
+
+    void SwapRows (int row1, int row2);
+    float RowsMinus (int starting_row, int column);
 
     void Print (std::ostream & out) const ;
     void Read  (std::istream & in ) ;

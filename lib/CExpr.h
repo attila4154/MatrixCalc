@@ -6,28 +6,33 @@
 #include <vector>
 #include <memory>
 
-using namespace std;
 //================================================================
 class CExpr {
   public:
     CExpr () = default;
-    CExpr (shared_ptr<CMatrix> matrix);
-    void   ReadExpr (istream & in, CMemory & matrices);
-    CMatrix * Evaluate(CMemory & matrices);
+    CExpr (MPtr matrix);
+    void   ReadExpr (std::istream & in, CMemory & matrices);
+    MPtr Evaluate(CMemory & matrices);
     void Transpose ();
-    shared_ptr<Token> GetMatrix ();
-    void ReadCommand (int command, std::istream & in, CMemory & matrices); 
+    std::shared_ptr<Token> GetMatrix ();
+    void ReadFullCommand (int command, std::istream & in, CMemory & matrices); 
+    int  TryToReadCommand   (std::istream & in); 
     friend std::ostream & operator << (std::ostream & out, const CExpr & expr);
     
   private:
-    void ParseExpr (istream & in, CMemory & matrices);
+    void MergeCom (std::istream & in, CMemory & matrices);
+    void SplitCom (std::istream & in, CMemory & matrices);
+    void TransposeCom (std::istream & in, CMemory & matrices);
+    void ParseExpr (std::istream & in, CMemory & matrices);
     void TurnToRPN (void);
 
     enum ExprCommands {
       NOTSET,
       MERGE, 
-      SPLIT
+      SPLIT,
+      TRANSPOSE,
+      GEM
     };
-    vector <shared_ptr<Token>> tokens;
+    std::vector <std::shared_ptr<Token>> tokens;
 };
 //================================================================

@@ -3,19 +3,24 @@
 #include "../lib/CDense.h"
 
 //=======================================================================
-CDense::CDense               (int m, int n) : CMatrix (m,n) {
+CDense::CDense               (int m, int n) : CMatrix (m,n, true) {
     m_matrix.resize(m);
     m_matrix.reserve(m);
     for (int i = 0; i < m_m; i++)
         m_matrix[i].resize(m_n);
 }
 //-----------------------------------------------------------------------
-CDense::CDense               () : CMatrix (0,0) {
+CDense::CDense               () : CMatrix (0,0, true) {
     // m_matrix.resize(m_m);
     // m_matrix.reserve(m_m);
 }
 //-----------------------------------------------------------------------
-CDense::CDense (const CDense & other) : CMatrix (other.m_m, other.m_n) {
+CDense::CDense (float number) : CMatrix (1, 1, false) {
+    m_matrix.resize(1);
+    m_matrix[0].push_back(number);
+}
+//-----------------------------------------------------------------------
+CDense::CDense (const CDense & other) : CMatrix (other.m_m, other.m_n, other.is_matrix) {
     m_matrix.resize(m_m);
     m_matrix.reserve(m_m);
     for (int i = 0; i < m_m; ++i) {
@@ -25,15 +30,6 @@ CDense::CDense (const CDense & other) : CMatrix (other.m_m, other.m_n) {
         }
     }
 }
-//-----------------------------------------------------------------------
-// CDense & CDense::operator = (const CDense & other) {
-//     if (&other == this) return *this;
-//     CDense temp (other);
-//     std::swap (temp.m_m, m_m);
-//     std::swap (temp.m_n, m_n);
-//     std::swap (temp.m_matrix, m_matrix);
-//     return *this;
-// }
 //-----------------------------------------------------------------------
 float CDense::GetCoord (int m, int n) const {
     if (m > m_m || n > m_n) throw WrongDimensions ();
@@ -45,21 +41,22 @@ void  CDense::SetCoord (float value, int m, int n) {
     m_matrix[m][n] = value;
 }
 //-----------------------------------------------------------------------
-void CDense::Transpose () {
-    std::vector<std::vector <float>> temp;
-    temp.resize(m_n);
-    for (int i = 0; i < m_n; i++) 
-        temp[i].resize (m_m);
+void CDense::SwapRows (int row1, int row2) {
+    std::swap (m_matrix[row1], m_matrix[row2]);
+}
+//-----------------------------------------------------------------------
+MPtr CDense::Transpose () {
+    std::shared_ptr<CDense> transposed = std::make_shared<CDense> (m_n, m_m);
+    // temp.resize(m_n);
+    // for (int i = 0; i < m_n; i++) 
+    //     temp[i].resize (m_m);
 
     for (int i = 0; i < m_m; i++) {
         for (int j = 0; j < m_n; j++) {
-            temp[j][i] = m_matrix [i][j];
+            transposed->m_matrix[j][i] = m_matrix [i][j];
         }
     }
-    m_matrix = temp;
-    int tempN = m_n;
-    m_n = m_m;
-    m_m = tempN;
+    return transposed;
 }
 //-----------------------------------------------------------------------
 DensePtr operator + (const CDense & left, const CDense & right) {
@@ -78,7 +75,6 @@ DensePtr operator + (const CDense & left, const CDense & right) {
         }
     } 
     return temp;
-//-----------------------------------------------------------------------
 }
 //-----------------------------------------------------------------------
 std::shared_ptr<CDense> CDense::operator - (const CDense & other) const {
@@ -97,30 +93,6 @@ std::shared_ptr<CDense> CDense::operator - (const CDense & other) const {
 
     return temp;
 }
-//-----------------------------------------------------------------------
-// shared_ptr<CDense> operator * (float alpha, const CDense & matrix){
-//     shared_ptr<CDense> temp = make_shared<CDense> (matrix.m_m, matrix.m_n);
-//     for (int i = 0; i < temp.m_m; i++) {
-//         temp.m_matrix[i].resize(temp.m_n);
-//         temp.m_matrix[i].reserve(temp.m_n);
-//     }
-//     for (int i = 0; i < matrix.m_m; ++i) {
-//         for (int j = 0; j < matrix.m_n; j++)  
-//         {
-//             temp.m_matrix[i][j] = matrix.m_matrix[i][j] * alpha;
-//         }
-//     } 
-
-//     return temp;
-// }
-
-// shared_ptr<CDense> operator * (const CDense & left, const CDense & right) {
-//     if (left.m_n != right.m_m) throw WrongFormat ();
-//     shared_ptr<CDense> temp = make_shared <CDense> (left.m_m, right.m_n);
-    
-
-//     return temp;
-// }
 //-----------------------------------------------------------------------
 void CDense::Print(std::ostream & out) const {
     for (size_t i = 0; i < m_matrix.size(); ++i) {

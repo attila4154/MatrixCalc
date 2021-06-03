@@ -12,6 +12,7 @@ class CDense : public CMatrix {
   public:
     CDense               ();
     CDense               (int m, int n);
+    CDense               (float number);
     CDense               (const CDense & other);
     CDense & operator =    (const CDense & other);
 
@@ -24,22 +25,11 @@ class CDense : public CMatrix {
     float GetCoord (int m, int n) const ;
     void  SetCoord (float value, int m, int n) ;
 
-    void Transpose ();
+    void SwapRows (int row1, int row2);
+    float RowsMinus (int starting_row, int column);
 
-    // CMatrix & operator * (const CMatrix & other) const;
-    // friend CDense operator * (float alpha, const CDense & matrix);
-    // CMatrix & Split      (int m, int n);
-    // CMatrix & Merge      (const CMatrix & other) const;
-    // CMatrix & Transpose  ();
-    // CMatrix & Inverse    ();
-    // CMatrix & gem  ();
-    // int       Rank () const;
-    // float     Determinant () const;
+    MPtr Transpose ();
 
-    // friend std::istream & operator >> (std::istream & in, CDense & matrix);
-    // friend std::ostream & operator << (std::ostream & out,const CDense & matrix);
-//    friend void GEM         (const CMatrix & matrix);
-//    friend void GEM_comment (const CMatrix & matrix);
     void Print (std::ostream & out) const;
     void Read  (std::istream & in);
     ~CDense();

@@ -1,20 +1,18 @@
 #include "../lib/CSparse.h"
 
 //===========================================
-CSparse::CSparse () : CMatrix (0,0) {
+CSparse::CSparse () : CMatrix (0,0, true) {
 }
 //-------------------------------------------
-CSparse::CSparse (int m, int n) : CMatrix (m, n) {}
+CSparse::CSparse (int m, int n) : CMatrix (m, n, true) {}
 //-------------------------------------------
-CSparse::CSparse (const CSparse & other) : CMatrix (other.m_m, other.m_n) {
+CSparse::CSparse (const CSparse & other) : CMatrix (other.m_m, other.m_n, true) {
     m_matrix = other.m_matrix; 
 }
 //-------------------------------------------
 CMatrix * CSparse::Clone () {
     return new CSparse (*this);
 }
-//-------------------------------------------
-
 //-------------------------------------------
 float CSparse::GetCoord (int m, int n) const {
     /* check if sparse matrix contains elements under coords (m,n),
@@ -34,16 +32,53 @@ void  CSparse::SetCoord (float value, int m, int n) {
     m_matrix.emplace (std::pair<int,int>(m, n), value);
 }
 //-------------------------------------------
-void CSparse::Transpose () {
-    std::map<std::pair<int,int>, float> transposed;
+void CSparse::SwapRows (int row1, int row2) {
+    float value1, value2;
+    for (int i = 0; i < m_n; i++) {
+        value1 = GetCoord (row1, i);
+        value2 = GetCoord (row2, i);
+        m_matrix[std::pair<int,int> (row1,i)] = value2;
+        m_matrix[std::pair<int,int> (row2,i)] = value1;
+    }
+}
+//-----------------------------------------------------------------------
+// float CDense::RowsMinus (int starting_row, int column) {
+//     /*we have some matrix : (a b c ...)
+//                             (d e f ...)
+//                             (g h i ...)
+//                                ...
+//                             (  ...    )
+
+//     */
+//     bool changed = false;
+//     // float changes = 
+//     float value; //d
+//     float nasobek2;
+//     float odectene_cislo;
+//     float a = GetCoord (starting_row, column);
+//     for (int i = starting_row + 1; i < m_m; i++) {
+//         nasobek2 = GetCoord (i, column);
+//         for (int j = column; j < m_n; j++) {
+//             value = GetCoord (i, j); //d
+//             odectene_cislo = GetCoord (starting_row, j);
+//             SetCoord (a * value - nasobek2 * odectene_cislo, i, j);
+//             changed = true;
+//         }
+//     }
+
+//     // if (changed) return 1/;
+//     return 1;
+// }
+
+
+MPtr CSparse::Transpose () {
+    std::shared_ptr<CSparse> transposed = std::make_shared<CSparse> (m_n, m_m);
 
     for (auto & v : m_matrix) {
-        transposed.emplace (std::pair<int,int> (v.first.second, v.first.first), v.second);
+        transposed->m_matrix.emplace (std::pair<int,int> (v.first.second, v.first.first), v.second);
     }
-    m_matrix = transposed;
-    int temp = m_n;
-    m_n = m_m;
-    m_m = temp; 
+
+    return transposed;
 }
 //-------------------------------------------
 void CSparse::Print (std::ostream & out) const {

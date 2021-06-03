@@ -25,6 +25,7 @@ enum commands {
     READEXPR,
     EVALUATE,
     INVERSE,
+    RANK,
     WRONG_COM,
     EXIT
 };
@@ -32,20 +33,19 @@ enum commands {
 class CApplication {
   public:
     void        Run         ();
+  private:
     int         GetCommand  (std::istream & in);
     std::string ReadVar     (std::istream & in);
     void        ReadMatrix  (std::istream & in, MPtr & matrix, int m, int n);
     void        ReadSize    (std::istream & in, int & m, int & n);
     void        Execute     (std::istream & in, CMemory & matrices);
-    // void        ReadCommand (std::istream & in, CMemory & matrices);
-
-  private:
-    void Print    (std::istream & in);
-    void Gem      (std::istream & in);
-    void Scan     (std::istream & in);
-    void ReadExpr (std::istream & in);
-    void Evaluate (std::istream & in);
-    void Transpose(std::istream & in);
+    void        Print       (std::istream & in);
+    void        Gem         (std::istream & in);
+    void        Scan        (std::istream & in);
+    void        ReadExpr    (std::istream & in);
+    void        Evaluate    (std::istream & in);
+    void        Transpose   (std::istream & in);
+    void        Rank        (std::istream & in);
     
     CMemory matrices;
 };

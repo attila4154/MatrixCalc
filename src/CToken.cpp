@@ -10,7 +10,11 @@ int     Token::GetType (void) const
   return type;
 } 
 //-------------------------------------------------------------
-CMatrix * Token::Value (void) 
+std::string * Token::GetName () {
+    return nullptr;
+}
+//-------------------------------------------------------------
+MPtr Token::Value (CMemory & matrices) 
 {
   return nullptr;
 }
@@ -27,8 +31,14 @@ std::ostream & operator << (std::ostream & out, const Token & t) { t.Print(out);
 MatrixToken::MatrixToken (std::shared_ptr<CMatrix> m) : Token (Token::TokenType::MATRIX), matrix (m) {
 }
 //-------------------------------------------------------------
-CMatrix * MatrixToken::Value () {
-    return matrix.get();
+MatrixToken::MatrixToken (float number) : Token (Token::TokenType::Number) {
+    matrix = std::make_shared<CDense>(number);
+}
+//-------------------------------------------------------------
+MatrixToken::MatrixToken (CMatrix * m) : Token (Token::TokenType::MATRIX), matrix (std::shared_ptr <CMatrix> (m) ) {}
+//-------------------------------------------------------------
+MPtr MatrixToken::Value (CMemory & matrices) {
+    return matrix;
 }
 //-------------------------------------------------------------
 void MatrixToken::Print (std::ostream & out) const {
@@ -52,10 +62,20 @@ void Operator::Print (std::ostream & out) const {
 //-------------------------------------------------------------
 int Operator::Precedence () {return precedence;}
 //-------------------------------------------------------------
-std::shared_ptr<MatrixToken> Operator::Calculate (std::shared_ptr<Token> right, std::shared_ptr<Token> left) {
-    if (op == '+') return std::make_shared<MatrixToken> (*left->Value() + *right->Value());
-    if (op == '-') return std::make_shared<MatrixToken> (*left->Value() - *right->Value());
-    if (op == '*') return std::make_shared<MatrixToken> (*left->Value() * *right->Value());
+std::shared_ptr<MatrixToken> Operator::Calculate 
+(std::shared_ptr<Token> right, std::shared_ptr<Token> left, CMemory & matrices) {
+    MPtr leftMatrix, rightMatrix;
+    if (left->GetType() == TokenType::Variable) {
+        leftMatrix = matrices.find(*left->GetName())->second->Evaluate(matrices);
+    }
+    else leftMatrix = left->Value(matrices);
+    if (right->GetType() == TokenType::Variable) {
+        rightMatrix = matrices.find(*right->GetName())->second->Evaluate(matrices);
+    }
+    else rightMatrix = right->Value(matrices);
+    if (op == '+') return std::make_shared<MatrixToken> (*leftMatrix + *rightMatrix);
+    if (op == '-') return std::make_shared<MatrixToken> (*leftMatrix - *rightMatrix);
+    if (op == '*') return std::make_shared<MatrixToken> (*leftMatrix * *rightMatrix);
     
     throw ("");
 }
@@ -72,16 +92,6 @@ void Brackets::Print (std::ostream & out) const {
     out << (leftBr ? '(' : ')');
 }
 //-------------------------------------------------------------
-//==================
-//   Numeric class:
-//==================
-//-------------------------------------------------------------
-Numeric::Numeric (int n) : Token(Token::TokenType::Number), value(n) {}
-//-------------------------------------------------------------
-void Numeric::Print (std::ostream & out) const {
-    out << value;
-}
-//-------------------------------------------------------------
 //===================
 //   Variable class:
 //===================
@@ -92,7 +102,7 @@ Variable::Variable (const  std::string & name, std::shared_ptr<CExpr>  matrix,
     expression(matrix), evaluatedExpr (nullptr)  
 {
     try {
-        evaluatedExpr = shared_ptr<CMatrix>(expression->Evaluate(matrices));
+        evaluatedExpr = MPtr(expression->Evaluate(matrices));
     } catch (variable_not_set & var) {
         std::cout << "variable was not found, value is null" << std::endl;
         evaluatedExpr = nullptr;
@@ -102,13 +112,16 @@ Variable::Variable (const  std::string & name, std::shared_ptr<CExpr>  matrix,
 Variable::Variable (const std::string & name, nullptr_t) 
 : Token(Token::TokenType::Variable), varName(name), expression(nullptr), evaluatedExpr (nullptr) {}
 //-------------------------------------------------------------
-CMatrix * Variable::Value (void) {
-   if (!evaluatedExpr) throw variable_not_set ();
-   return evaluatedExpr.get();
+MPtr Variable::Value (CMemory & matrices) {
+    return matrices.find(varName)->second->Evaluate(matrices);
 }
 //-------------------------------------------------------------
 const std::string & Variable::Name () const {
     return varName;
+}
+//-------------------------------------------------------------
+std::string * Variable::GetName  () {
+    return &varName;
 }
 //-------------------------------------------------------------
 void Variable::Print (std::ostream & out) const {
@@ -117,7 +130,6 @@ void Variable::Print (std::ostream & out) const {
     }
     else {
         out << varName;
-        out << "printing variable" << endl;
     }
 }
 //=============================================================

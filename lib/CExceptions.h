@@ -3,9 +3,15 @@
 //======================================================================
 class WrongFormat : public std::exception {
   public:
+    WrongFormat (std::string && text = "") : text (text) {}  
     const char * what () {
-        return "Wrong format\n";
+        if (text.empty())
+            return "Wrong format\n";
+        else return text.data();
     }
+
+  private:
+    std::string text;
 };
 //----------------------------------------------------------------------
 class WrongDimensions : public std::exception {
@@ -43,15 +49,7 @@ struct variable_not_set : public std::exception {
     variable_not_set () {varName = "";    }
     variable_not_set (const std::string & var) : varName (var) {}
     const char * what () const throw (){
-        if (varName == "") return "variable not set\n";
-        else {
-            // std::string text = "variable \'";
-            // text += varName.data();
-            // text.reserve (100);
-            // text = text + "\' not set\n";
-            // return text.data();
-            return "variable not set\n";
-        }
+        return varName.data();
     }
     
   private:

@@ -4,10 +4,10 @@
 - add "better" ecxeptions
 - add "better control" everywhere possible
 - (done) add SparseMatrix Class and change all main matrix functions
-- (done) add transpose command
+- add transpose command
 - add transpose function (not necessary)
 - add inverse command for square matrix
 - merge split commands
 - determinant, rank commands
-- gem command (yeah boy) 
+- (done) gem command (yeah boy) 
 - change matrix multiplication to strassen's alg.

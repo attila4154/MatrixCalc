@@ -27,7 +27,8 @@ class Token {
     Token                        (int t);
     int           GetType        (void)               const;
     virtual void  Print          (std::ostream & out) const = 0; 
-    virtual CMatrix * Value (void);
+    virtual MPtr Value (CMemory & matrices);
+    virtual std::string * GetName ();
     virtual void Transpose ();
     friend std::ostream & operator << (std::ostream & out, const Token & t);
   protected:
@@ -37,8 +38,10 @@ class Token {
 class MatrixToken : public Token {
   public:
     MatrixToken (const CMatrix & m);
+    MatrixToken (CMatrix * m);
     MatrixToken (std::shared_ptr<CMatrix> m);
-    CMatrix * Value (void) override;
+    MatrixToken (float number);
+    MPtr Value (CMemory & matrices) override;
     std::shared_ptr<CMatrix> SharedValue ();
     void Print (std::ostream & out) const;
     void Transpose () override;
@@ -52,7 +55,8 @@ public:
     Operator (char sign, int prec);
     void Print (std::ostream & out) const;
     int Precedence ();
-    std::shared_ptr<MatrixToken> Calculate (std::shared_ptr<Token> left, std::shared_ptr<Token> right);
+    std::shared_ptr<MatrixToken> Calculate 
+    (std::shared_ptr<Token> left, std::shared_ptr<Token> right, CMemory & matrices);
 private:
     char op;
     int precedence;
@@ -66,22 +70,15 @@ class Brackets : public Token {
     bool leftBr;
 };
 //=========================================================
-class Numeric : public Token {
-  public:
-    Numeric (int n);
-    void Print (std::ostream & out) const;
-  private:
-    float value;
-};
-//=========================================================
 class Variable : public Token {
   public:
     Variable (const std::string & name, std::shared_ptr<CMatrix> matrix);
     Variable (const std::string & name, std::shared_ptr<CExpr>  matrix,
               CMemory & matrices);
     Variable (const std::string & name, nullptr_t);
-    CMatrix * Value (void);
+    MPtr Value (CMemory & matrices);
     const std::string & Name () const ; 
+    std::string * GetName ();
     void Print (std::ostream & out) const;
   private:
     std::string varName;

@@ -15,7 +15,7 @@ bool ShouldBeDense (const std::string & src);
 // class CSparse;
 class CMatrix {
   public:
-    CMatrix (int m, int n);
+    CMatrix (int m, int n, bool is_matrix);
     CMatrix () = default;
     virtual CMatrix * Clone () = 0;
     friend MPtr operator + (const CMatrix & left, const CMatrix & right);
@@ -27,8 +27,15 @@ class CMatrix {
     void         ReadSize  (std::string & src );
     virtual void Read      (std::istream & in ) = 0;
     bool IsSet () const;
-    virtual void Transpose () = 0;
-    void GEM ();
+    virtual MPtr Transpose () = 0;
+    CMatrix * GEM ();
+    bool ColumnIsZero (int starting_row, int column) const; 
+    int ColumnNotZero (int starting_row, int column) const; 
+    virtual void SwapRows (int row1, int row2) = 0;
+    float RowsMinus (int starting_row, int column);
+
+    int Rank ();
+
     friend MPtr Merge (const CMatrix & left, const CMatrix & right);
     friend MPtr Split (const CMatrix & matrix, int m, int n, int c_m, int c_n);
     friend bool ProductShouldBeDense (const CMatrix & left, const CMatrix & right, char op);
@@ -36,6 +43,7 @@ class CMatrix {
     friend int CountProduct (const CMatrix & left, const CMatrix & right);
     friend bool MergeShouldBeDense (const CMatrix & left, const CMatrix & right);
     friend bool SplitShouldBeDense (const CMatrix & matrix, int m, int n, int c_m, int c_n);
+    
 
     friend std::istream & operator >>
      (std::istream & in, std::shared_ptr<CMatrix> & matrix);
@@ -47,4 +55,5 @@ class CMatrix {
   protected:
     int m_m;
     int m_n;
+    bool is_matrix;
 };
