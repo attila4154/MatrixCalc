@@ -16,9 +16,17 @@ class WrongFormat : public std::exception {
 //----------------------------------------------------------------------
 class WrongDimensions : public std::exception {
   public:
-    const char * what () {
-        return "Wrong dimensions\n";
-    }
+    WrongDimensions (int lm = -1, int ln = -1, int rm = -1, int rn = -1) : e_Lm (lm), e_Ln (ln),
+                                                                           e_Rm (rm), e_Rn (rn) {} 
+    void Print (std::ostream & out) {
+            out << "Wrong dimensions";
+        if (e_Lm == -1) out << '\n';
+        else out << ": left matrix has " << e_Lm << " rows and " << e_Ln << " columns" <<
+                           " right has " << e_Rm << " rows and " << e_Rn << " columns" << std::endl;
+    }  
+
+    int e_Lm, e_Ln;
+    int e_Rm, e_Rn;
 };
 //----------------------------------------------------------------------
 struct exit_exc : public std::exception {

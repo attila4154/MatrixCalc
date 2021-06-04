@@ -2,12 +2,7 @@
 
 //============================================================================
 CMatrix::CMatrix (int m, int n, bool is_matrix) : m_m (m), m_n (n), is_matrix (is_matrix) {}
-//----------------------------------------------------------------------------
-// CMatrix::CMatrix (float number) : m_m (1), m_n (1), is_matrix (false) {
-//     CDense * t = new CDense (number);
-//     this = t;
-// }
-//----------------------------------------------------------------------------
+//============================================================================
 MPtr operator + (const CMatrix & left, const CMatrix & right) {
     if (!left.is_matrix) {
         if (!right.is_matrix) {
@@ -100,14 +95,12 @@ int CMatrix::Rank () {
     for (int i = m_m - 1; i >= 0; i--) {
         cntNotZero = 0;
         for (int j = m_n - 1; j >= 0; j--) {
-            if (abs(gemmed->GetCoord (i,j)) <= 0.00001) cntNotZero++;
+            if (abs(gemmed.first->GetCoord (i,j)) <= 0.00001) cntNotZero++;
             else break;
         }
         if (cntNotZero == m_n) h++;
         else break;
-    }   
-
-    delete gemmed;
+    }
     return m_m - h;
 }
 //----------------------------------------------------------------------------
@@ -140,23 +133,21 @@ MPtr Split (const CMatrix & matrix, int m, int n, int c_m, int c_n) {
 
     for (int i = 0 ; i < m; i++) {
         for (int j = 0; j < n; j++) {
-            temp->SetCoord (matrix.GetCoord(i+c_m-1, j+c_n-1), i, j);
+            temp->SetCoord (matrix.GetCoord(i+c_m - 1, j+c_n - 1), i, j);
         }
     }
 
     return temp;
 }
 //----------------------------------------------------------------------------
-CMatrix * CMatrix::GEM () {
+std::pair<MPtr, float> CMatrix::GEM () {
     int l = 0, k = 0;
     bool over = false;
-    auto temp = (this->Clone());
+    auto temp = std::shared_ptr<CMatrix>(this->Clone());
     float changes = 1;
 
     while (k < temp->m_n && l < temp->m_m ) {
         while (temp->ColumnIsZero (l, k)) {
-            // temp->Print (cout);
-            // cout << endl << endl;
             k++;
             if (k >= temp->m_n) {
                 over = true;
@@ -169,19 +160,16 @@ CMatrix * CMatrix::GEM () {
             if (row != m_m+1) {
                 temp->SwapRows (row, l);
                 changes *= (-1);
-                // temp->Print (cout);
-                // cout << endl << endl;
             }
         }
         if (abs(temp->GetCoord (l, k)) > 0.00001) {
             changes *= temp->RowsMinus (l, k);
-            // temp->Print (cout);
-            // cout << endl << endl;
             k++; l++;
         }
     }
-
-    return temp;
+    std::cout << "changes are " << changes << std::endl;
+    std::pair<MPtr, float> gemmed (temp, changes);
+    return gemmed;
 }
 //----------------------------------------------------------------------------
 bool CMatrix::ColumnIsZero (int starting_row, int column) const {
@@ -211,12 +199,12 @@ float CMatrix::RowsMinus (int starting_row, int column) {
 
     */
     bool changed = false;
-    // float changes = 
+    float changes = 1;
     float value; //d
     float nasobek2;
     float odectene_cislo;
     float a = GetCoord (starting_row, column);
-    // if (starting_row + 1!= 
+     
     for (int i = starting_row + 1; i < m_m; i++) {
         nasobek2 = GetCoord (i, column);
         for (int j = column; j < m_n; j++) {
@@ -225,9 +213,167 @@ float CMatrix::RowsMinus (int starting_row, int column) {
             SetCoord (a * value - nasobek2 * odectene_cislo, i, j);
             changed = true;
         }
+        changes *= a;
     }
 
-    return 1;
+    return changes;
+}
+//----------------------------------------------------------------------------
+bool Compare (float left, float right) {
+    //compare if left value is equal to right one:
+    // return left == right;
+    return (fabs (left - right) <= 0.00001); 
+}
+//----------------------------------------------------------------------------
+MPtr CMatrix::Inverse() {
+    if (m_n != m_m) throw WrongFormat ("matrix is not square\n");
+    CMatrix * m = new CDense (m_m, 2 * m_n);
+    for (int i = 0; i < m_m; i++ ) {
+        for (int j = 0; j < m_n; j++) {
+            m->SetCoord (GetCoord (i,j), i ,j);
+        }
+    }
+    for (int i = 0; i < m_m; i++) {
+        for (int j = m_n; j < m->m_n; j++) {
+            if (i == j - m_n) m->SetCoord (1, i, j);
+            else m->SetCoord (0, i, j);
+        }
+    }
+
+    int cRow, cCol;
+    int maxCount = 200;
+    int count = 0;
+    bool complete = false;
+
+    std::cout << "from:\n" << *m << std::endl;
+
+    while ((!complete) && (count < maxCount)) 
+    {
+        for (int diagIdx = 0; diagIdx < m->m_m; diagIdx++) 
+        {
+            cRow = diagIdx;
+            cCol = diagIdx;
+
+            int maxIdx = m->FindMaxValInCol (cCol, cRow);
+
+            if (maxIdx != cRow) {
+                std::cout << "swap rows: " << cRow << ',' << maxIdx << std::endl;
+                m->SwapRows (cRow, maxIdx);
+                std::cout << *m << std::endl;
+            }
+            //making current value is equal to one:
+            if (!Compare (m->GetCoord (cRow, cCol), 1) )
+            {
+                float factor = 1.0 / m->GetCoord (cRow, cCol);
+                std::cout << "multiply row " << cRow << " by factor " << factor << std::endl;
+                m->MultRow (cRow, factor);
+                std::cout << *m << std::endl;
+            }
+
+            // Column operations:
+            for (int rowIndex = cRow + 1; rowIndex < m->m_m; rowIndex ++) 
+            {
+                if (!Compare (m->GetCoord (rowIndex, cCol), 0.0 ) ) 
+                {
+                    int rowOneIndex = cCol;
+
+                    float curValue = m->GetCoord (rowIndex, cCol);
+
+                    float rowOneValue = m->GetCoord (rowOneIndex, cCol);
+                    
+                    if (!Compare (rowOneValue, 0.0) ) {
+                        float correctionFactor = - curValue / rowOneValue;
+                        m->MultAdd (rowIndex, rowOneIndex, correctionFactor); 
+                        std::cout << "multiply row " << rowOneIndex << " by " << correctionFactor <<
+                        " and add to row " << rowIndex << std::endl;
+                        std::cout << *m << std::endl;
+                    }
+
+                }
+
+            } 
+            //Row operations:
+
+            for (int colIndex = cCol + 1; colIndex < m_n; colIndex++) {
+                if (!Compare (m->GetCoord(cRow, colIndex), 0.0) ) {
+                    int rowOneIndex = colIndex;
+
+                    float curValue = m->GetCoord (cRow, colIndex);
+                    float rowOneValue = m->GetCoord (rowOneIndex, colIndex);
+
+                    if (!Compare (rowOneValue, 0.0) ) {
+                        float correctionFactor = - curValue / rowOneValue;
+                        m->MultAdd (cRow, rowOneIndex, correctionFactor);
+                        std::cout << "multiply row " << rowOneIndex << " by " << correctionFactor <<
+                        " and add to row " << cRow << std::endl;
+                        std::cout << *m << std::endl;
+                    }
+                }  
+            }
+        }   
+            if (m->leftHalfIsId() ) {
+                complete = true;
+                std::cout << *m << std::endl;
+                std::cout << "matrix is inversed\n";
+            }
+        count++;
+    }
+    if (complete) {
+        auto inversed = Split (*m, m_m, m_m, 1, m_n + 1 );
+        delete m;
+        return inversed;
+    }
+
+    delete m;
+    return nullptr;
+}
+//----------------------------------------------------------------------------
+int CMatrix::FindMaxValInCol (int col, int starting_row) const {
+    float max = GetCoord (starting_row, col);
+    float cur;
+    int maxRow = starting_row;
+    for (int i = starting_row; i < m_m; i++) {
+        cur = GetCoord (i, col);
+        if (cur > max) maxRow = i;
+    }
+        
+    return maxRow;
+}
+//----------------------------------------------------------------------------
+void CMatrix::MultRow (int row, float factor) {
+    float value;
+    for (int j = 0; j < m_n; j++) {
+        value = GetCoord (row, j);
+        SetCoord (factor * value, row, j);
+    }
+}
+//----------------------------------------------------------------------------
+void CMatrix::MultAdd (int i, int j, float factor) {
+    float value;
+    for (int k = 0; k < m_n; k++){
+        value = GetCoord (j,k) * factor;
+        SetCoord (GetCoord (i,k) + value, i,k);
+    }
+}
+//----------------------------------------------------------------------------
+bool CMatrix::leftHalfIsId () const {
+    for (int i = 0; i < m_m; i++) { 
+        for (int j = 0; j < m_m; j++) {
+            if (i == j && !Compare (GetCoord(i,j), 1)) return false;
+            if (i != j && !Compare (GetCoord(i,j), 0)) return false;
+        }
+    }
+    return true;
+}   
+//----------------------------------------------------------------------------
+float CMatrix::Determinant () {
+    if (m_n != m_m) throw WrongFormat ("matrix is not square\n");
+    auto gemmed = GEM ();
+    float det = 1;
+    for (int i = 0, j = 0; i < m_m; i++, j++)
+        det *= gemmed.first->GetCoord(i,j);
+
+    return det / gemmed.second;
 }
 //----------------------------------------------------------------------------
 std::istream & operator >> (std::istream & in, std::shared_ptr<CMatrix> & matrix){
@@ -277,7 +423,20 @@ bool CMatrix::IsSet (void) const {
 }
 //----------------------------------------------------------------------------
 std::ostream & operator << (std::ostream & out, const CMatrix & matrix){
-    matrix.Print (out);
+    if (!matrix.is_matrix) {
+        out << matrix.GetCoord(0,0);
+        return out;
+    }
+    for (int i = 0; i < matrix.m_m; i++ ) {
+        for (int j = 0; j < matrix.m_n; j++) {
+            if (!j) out << '(';
+            out << std::fixed << std::setprecision(2) << matrix.GetCoord (i,j);
+            if (j != matrix.m_n - 1) out << ' ';
+            else out << ')';
+        }
+        if (i != matrix.m_m - 1)
+            out <<  std::endl;
+    }
     return out;
 }
 //----------------------------------------------------------------------------
@@ -328,6 +487,7 @@ bool MergeShouldBeDense (const CMatrix & left, const CMatrix & right) {
 }
 //----------------------------------------------------------------------------
 bool SplitShouldBeDense (const CMatrix & matrix, int m, int n, int c_m, int c_n) {
+    // for (int i = 
     return true;
 }
 //----------------------------------------------------------------------------

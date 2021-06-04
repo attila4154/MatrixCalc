@@ -12,6 +12,7 @@
 #include "../src/CSparse.cpp"
 #include "define.h"
 
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -27,6 +28,8 @@ enum commands {
     INVERSE,
     RANK,
     WRONG_COM,
+    DETERMINANT,
+    HELP,
     EXIT
 };
 //----------------------------------------------------------------------
@@ -42,10 +45,14 @@ class CApplication {
     void        Print       (std::istream & in);
     void        Gem         (std::istream & in);
     void        Scan        (std::istream & in);
+    void        ReadFromFile(const std::string & in, std::string varName);
     void        ReadExpr    (std::istream & in);
     void        Evaluate    (std::istream & in);
     void        Transpose   (std::istream & in);
     void        Rank        (std::istream & in);
+    void        Inverse     (std::istream & in);
+    void        Determinant (std::istream & in);
+    void        Help        ();
     
     CMemory matrices;
 };

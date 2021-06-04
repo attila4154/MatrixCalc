@@ -139,7 +139,7 @@ void CExpr::ReadFullCommand (int command, std::istream & in, CMemory & matrices)
             if (!(in >> var) ) throw wrong_command("here\n");
             if (matrices.find (var) == matrices.end()) throw variable_not_set(var);
             auto matrix = matrices.find(var)->second->Evaluate(matrices);
-            auto gemmed = std::shared_ptr<CMatrix>(matrix->GEM());
+            auto gemmed = std::shared_ptr<CMatrix>(matrix->GEM().first);
             tokens.push_back (std::make_shared <MatrixToken> (gemmed));
             break;
         }
@@ -283,9 +283,9 @@ MPtr CExpr::Evaluate (CMemory & matrices) {
 }
 //----------------------------------------------------------------
 std::ostream & operator << (std::ostream & out, const CExpr & expr) {
-    for (auto & token : expr.tokens) {
-        token->Print(out);
-        out << std::endl;
+    for (int i = 0; i < expr.tokens.size(); i++) {
+        expr.tokens[i]->Print(out);
+        if (i != expr.tokens.size() - 1) out << std::endl;
     }
     return out;
 }
