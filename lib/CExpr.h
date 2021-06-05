@@ -11,11 +11,14 @@ class CExpr {
   public:
     CExpr () = default;
     CExpr (MPtr matrix);
-    void   ReadExpr (std::istream & in, CMemory & matrices);
+    int Size () const;
+    bool Contains (const std::string & varName) const;
+    bool ContainsVariable () const;
+    void ReadExpr (std::istream & in, CMemory & matrices);
     MPtr Evaluate(CMemory & matrices);
     void Transpose ();
     std::shared_ptr<Token> GetMatrix ();
-    void ReadFullCommand (int command, std::istream & in, CMemory & matrices); 
+    void ExecuteCommand (int command, std::istream & in, CMemory & matrices); 
     int  TryToReadCommand   (std::istream & in); 
     friend std::ostream & operator << (std::ostream & out, const CExpr & expr);
     

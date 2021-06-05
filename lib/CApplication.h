@@ -37,22 +37,26 @@ class CApplication {
   public:
     void        Run         ();
   private:
+
+    void        Execute     (std::istream & in);
     int         GetCommand  (std::istream & in);
-    std::string ReadVar     (std::istream & in);
-    void        ReadMatrix  (std::istream & in, MPtr & matrix, int m, int n);
-    void        ReadSize    (std::istream & in, int & m, int & n);
-    void        Execute     (std::istream & in, CMemory & matrices);
-    void        Print       (std::istream & in);
-    void        Gem         (std::istream & in);
+    void        SwitchCommand(std::istream & is, int command, 
+                                   const std::string & str);
     void        Scan        (std::istream & in);
-    void        ReadFromFile(const std::string & in, std::string varName);
+    void        Print       (std::istream & in);
     void        ReadExpr    (std::istream & in);
     void        Evaluate    (std::istream & in);
+    void        Gem         (std::istream & in);
     void        Transpose   (std::istream & in);
     void        Rank        (std::istream & in);
     void        Inverse     (std::istream & in);
     void        Determinant (std::istream & in);
+    std::string ReadVar     (std::istream & in);
+    void        ReadMatrix  (std::istream & in, MPtr & matrix, int m, int n);
+    // void        ReadSize    (std::istream & in, int & m, int & n);
+    void        ReadFromFile(const std::string & in, std::string varName);
     void        Help        ();
+    
     
     CMemory matrices;
 };

@@ -21,8 +21,8 @@ class WrongDimensions : public std::exception {
     void Print (std::ostream & out) {
             out << "Wrong dimensions";
         if (e_Lm == -1) out << '\n';
-        else out << ": left matrix has " << e_Lm << " rows and " << e_Ln << " columns" <<
-                           " right has " << e_Rm << " rows and " << e_Rn << " columns" << std::endl;
+        else out << ":\nLeft matrix has " << e_Lm << " rows and " << e_Ln << " columns" <<
+                           "; right has " << e_Rm << " rows and " << e_Rn << " columns" << std::endl;
     }  
 
     int e_Lm, e_Ln;
@@ -30,10 +30,6 @@ class WrongDimensions : public std::exception {
 };
 //----------------------------------------------------------------------
 struct exit_exc : public std::exception {
-    const char * what () const throw ()
-    {
-        return "exiting";
-    }
 };
 //----------------------------------------------------------------------
 struct wrong_command : public std::exception {
@@ -41,7 +37,7 @@ struct wrong_command : public std::exception {
     wrong_command (const std::string & text) : text (text) {}
     const char * what () const throw (){
         if (text == "") return "Wrong command\n";
-        else return &text[0];
+        else return text.data();
     }
     void Print (std::ostream & out) {
         if (text != "")

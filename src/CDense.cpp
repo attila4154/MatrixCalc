@@ -31,12 +31,12 @@ CDense::CDense (const CDense & other) : CMatrix (other.m_m, other.m_n, other.is_
     }
 }
 //-----------------------------------------------------------------------
-float CDense::GetCoord (int m, int n) const {
-    if (m > m_m || n > m_n) throw WrongDimensions ();
+float CDense::GetValue (int m, int n) const {
+    if (m >= m_m || n >= m_n) throw WrongDimensions ();
     return m_matrix [m][n];
 }   
 //-----------------------------------------------------------------------
-void  CDense::SetCoord (float value, int m, int n) {
+void  CDense::SetValue (float value, int m, int n) {
     if (m > m_n || n > m_n) throw WrongDimensions();
     m_matrix[m][n] = value;
 }
@@ -47,10 +47,6 @@ void CDense::SwapRows (int row1, int row2) {
 //-----------------------------------------------------------------------
 MPtr CDense::Transpose () {
     std::shared_ptr<CDense> transposed = std::make_shared<CDense> (m_n, m_m);
-    // temp.resize(m_n);
-    // for (int i = 0; i < m_n; i++) 
-    //     temp[i].resize (m_m);
-
     for (int i = 0; i < m_m; i++) {
         for (int j = 0; j < m_n; j++) {
             transposed->m_matrix[j][i] = m_matrix [i][j];
@@ -59,50 +55,15 @@ MPtr CDense::Transpose () {
     return transposed;
 }
 //-----------------------------------------------------------------------
-DensePtr operator + (const CDense & left, const CDense & right) {
-    if (! (left.m_n == right.m_n && left.m_m == right.m_m)) throw WrongFormat();
-    std::shared_ptr<CDense> temp = std::make_shared<CDense>(right.m_m, right.m_n);
-    for (int i = 0; i < temp->m_m; i++) {
-        temp->m_matrix[i].resize(temp->m_n);
-        temp->m_matrix[i].reserve(temp->m_n);
-    }
-    for (int i = 0; i < left.m_m; ++i) {
-        for (int j = 0; j < left.m_n; j++)  
-        {
-            temp ->m_matrix[i][j] =
-            left  .m_matrix[i][j] +
-            right .m_matrix[i][j]; 
-        }
-    } 
-    return temp;
-}
-//-----------------------------------------------------------------------
-std::shared_ptr<CDense> CDense::operator - (const CDense & other) const {
-    if (! (m_n == other.m_n && m_m == other.m_m)) throw WrongFormat();
-    std::shared_ptr<CDense> temp = std::make_shared<CDense> (other.m_m, other.m_n);
-    for (int i = 0; i < temp->m_m; i++) {
-        temp->m_matrix[i].resize(temp->m_n);
-        temp->m_matrix[i].reserve(temp->m_n);
-    }
-    for (int i = 0; i < m_m; ++i) {
-        for (int j = 0; j < m_n; j++)  
-        {
-            temp->m_matrix[i][j] = m_matrix[i][j] - other.m_matrix[i][j]; 
-        }
-    } 
-
-    return temp;
-}
-//-----------------------------------------------------------------------
-void CDense::Print(std::ostream & out) const {
-    for (size_t i = 0; i < m_matrix.size(); ++i) {
-        out << '(';
-        for (size_t j = 0; j < m_matrix[i].size(); j++)  
-            out << m_matrix[i][j] << (j != m_matrix[i].size() - 1 ? " " : "");
-        out << ')';
-        if (i != m_matrix.size() - 1) out << std::endl;
-    } 
-}
+// void CDense::Print(std::ostream & out) const {
+//     for (size_t i = 0; i < m_matrix.size(); ++i) {
+//         out << '(';
+//         for (size_t j = 0; j < m_matrix[i].size(); j++)  
+//             out << m_matrix[i][j] << (j != m_matrix[i].size() - 1 ? " " : "");
+//         out << ')';
+//         if (i != m_matrix.size() - 1) out << std::endl;
+//     } 
+// }
 //-----------------------------------------------------------------------
 void CDense::Read (std::istream & in) {
     m_matrix.resize(m_m);
@@ -120,10 +81,10 @@ void CDense::Read (std::istream & in) {
         if (i != m_m - 1 && ( (! (in >> character) || character != ';')))
             throw WrongFormat();
     } 
+    in >> character; if (character != ']') throw WrongFormat();
 }
 //-----------------------------------------------------------------------
-CMatrix * CDense::Clone () {
-    // CDense temp (*this);
+CMatrix * CDense::Clone () const {
     return new CDense (*this);
 }
 //-----------------------------------------------------------------------

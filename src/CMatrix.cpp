@@ -6,12 +6,13 @@ CMatrix::CMatrix (int m, int n, bool is_matrix) : m_m (m), m_n (n), is_matrix (i
 MPtr operator + (const CMatrix & left, const CMatrix & right) {
     if (!left.is_matrix) {
         if (!right.is_matrix) {
-            return std::make_shared<CDense> (left.GetCoord(0,0) + right.GetCoord(0,0));
+            return std::make_shared<CDense> (left.GetValue(0,0) + right.GetValue(0,0));
         }
         else throw WrongFormat("cannot sum by number\n");
     }
     if (!right.is_matrix) throw WrongFormat("cannot sum by number\n");
-    if (left.m_m != right.m_m || left.m_n != right.m_n) throw WrongDimensions();  
+    if (left.m_m != right.m_m || left.m_n != right.m_n) throw WrongDimensions(left.m_m, left.m_n,
+                                                                             right.m_m, right.m_n);  
     std::shared_ptr<CMatrix> temp;
     if ( ProductShouldBeDense (left, right, '+') )
         temp = std::make_shared<CDense>  (left.m_m, left.m_n);
@@ -20,8 +21,8 @@ MPtr operator + (const CMatrix & left, const CMatrix & right) {
     float value;
     for (int i = 0; i < left.m_m; i++ ){
         for (int j = 0; j < left.m_n; j++ ) {
-            value = left.GetCoord (i,j) + right.GetCoord (i,j);
-            temp->SetCoord (value, i, j);
+            value = left.GetValue (i,j) + right.GetValue (i,j);
+            temp->SetValue (value, i, j);
         }
     }
     return temp;
@@ -30,7 +31,7 @@ MPtr operator + (const CMatrix & left, const CMatrix & right) {
 MPtr operator - (const CMatrix & left, const CMatrix & right) {
     if (!left.is_matrix) {
         if (!right.is_matrix) {
-            return std::make_shared<CDense> (left.GetCoord(0,0) - right.GetCoord(0,0));
+            return std::make_shared<CDense> (left.GetValue(0,0) - right.GetValue(0,0));
         }
         else throw WrongFormat("cannot subtract by number\n");
     }
@@ -44,8 +45,8 @@ MPtr operator - (const CMatrix & left, const CMatrix & right) {
     float value;
     for (int i = 0; i < left.m_m; i++ ){
         for (int j = 0; j < left.m_n; j++ ) {
-            value = left.GetCoord (i,j) - right.GetCoord (i,j);
-            temp->SetCoord (value, i, j);
+            value = left.GetValue (i,j) - right.GetValue (i,j);
+            temp->SetValue (value, i, j);
         }
     }
     return temp;
@@ -54,7 +55,7 @@ MPtr operator - (const CMatrix & left, const CMatrix & right) {
 MPtr operator * (const CMatrix & left, const CMatrix & right) {
     if (!left.is_matrix) {
         if (!right.is_matrix) {
-            return std::make_shared<CDense> (left.GetCoord(0,0) * right.GetCoord(0,0));
+            return std::make_shared<CDense> (left.GetValue(0,0) * right.GetValue(0,0));
         }
         else {
             MPtr temp;
@@ -63,7 +64,7 @@ MPtr operator * (const CMatrix & left, const CMatrix & right) {
             else temp = std::make_shared<CSparse> (right.m_m, right.m_n);
             for (int i = 0; i < right.m_m; i ++) {
                 for (int j = 0; j < right.m_n; j++) {
-                    temp->SetCoord (left.GetCoord(0,0) * right.GetCoord(i,j), i , j);
+                    temp->SetValue (left.GetValue(0,0) * right.GetValue(i,j), i , j);
                 }
             }
             return temp;
@@ -81,9 +82,9 @@ MPtr operator * (const CMatrix & left, const CMatrix & right) {
         for (int j = 0; j < right.m_n; j++ ) {
             value = 0;
             for (int k = 0; k < left.m_n; k++) {
-                value += left.GetCoord(i,k) * right.GetCoord(k,j);
+                value += left.GetValue(i,k) * right.GetValue(k,j);
             } 
-            temp->SetCoord (value, i,j);
+            temp->SetValue (value, i,j);
         }
     }
     return temp;
@@ -95,7 +96,7 @@ int CMatrix::Rank () {
     for (int i = m_m - 1; i >= 0; i--) {
         cntNotZero = 0;
         for (int j = m_n - 1; j >= 0; j--) {
-            if (abs(gemmed.first->GetCoord (i,j)) <= 0.00001) cntNotZero++;
+            if (abs(gemmed.first->GetValue (i,j)) <= 0.00001) cntNotZero++;
             else break;
         }
         if (cntNotZero == m_n) h++;
@@ -112,12 +113,12 @@ MPtr Merge (const CMatrix & left, const CMatrix & right) {
     
     for (int i = 0; i < left.m_m; i++) {
         for (int j = 0; j < left.m_n; j++) {
-            temp->SetCoord (left.GetCoord(i,j),i,j);
+            temp->SetValue (left.GetValue(i,j),i,j);
         }
     }
     for (int i = 0; i < right.m_m; i++) {
         for (int j = 0; j < right.m_n; j++) {
-            temp->SetCoord (right.GetCoord(i,j),i,left.m_n + j);
+            temp->SetValue (right.GetValue(i,j),i,left.m_n + j);
         }
     }
     
@@ -133,7 +134,7 @@ MPtr Split (const CMatrix & matrix, int m, int n, int c_m, int c_n) {
 
     for (int i = 0 ; i < m; i++) {
         for (int j = 0; j < n; j++) {
-            temp->SetCoord (matrix.GetCoord(i+c_m - 1, j+c_n - 1), i, j);
+            temp->SetValue (matrix.GetValue(i+c_m - 1, j+c_n - 1), i, j);
         }
     }
 
@@ -155,19 +156,19 @@ std::pair<MPtr, float> CMatrix::GEM () {
             }
         }
         if (over) break;
-        if (abs(temp->GetCoord (l, k)) <= 0.00001) {
+        if (abs(temp->GetValue (l, k)) <= 0.00001) {
             int row = temp->ColumnNotZero (l+1, k);
             if (row != m_m+1) {
                 temp->SwapRows (row, l);
                 changes *= (-1);
             }
         }
-        if (abs(temp->GetCoord (l, k)) > 0.00001) {
+        if (abs(temp->GetValue (l, k)) > 0.00001) {
             changes *= temp->RowsMinus (l, k);
             k++; l++;
         }
     }
-    std::cout << "changes are " << changes << std::endl;
+    // std::cout << "changes are " << changes << std::endl;
     std::pair<MPtr, float> gemmed (temp, changes);
     return gemmed;
 }
@@ -175,7 +176,7 @@ std::pair<MPtr, float> CMatrix::GEM () {
 bool CMatrix::ColumnIsZero (int starting_row, int column) const {
     int cnt = 0;
     for (int j = starting_row; j < m_m; j++) {
-        if (abs (GetCoord (j, column)) <= 0.0001) cnt++;
+        if (abs (GetValue (j, column)) <= 0.0001) cnt++;
         else break;
     }
     // cout << "number of the rows is " <<  << endl;
@@ -185,7 +186,7 @@ bool CMatrix::ColumnIsZero (int starting_row, int column) const {
 //----------------------------------------------------------------------------
 int CMatrix::ColumnNotZero (int starting_row, int column) const {
     for (int j = starting_row; j < m_m; j++) {
-        if (abs(GetCoord (j, column)) >= 0.00001) return j; 
+        if (abs(GetValue (j, column)) >= 0.00001) return j; 
     }
     return m_m+1;
 }
@@ -198,20 +199,18 @@ float CMatrix::RowsMinus (int starting_row, int column) {
                             (  ...    )
 
     */
-    bool changed = false;
     float changes = 1;
     float value; //d
     float nasobek2;
     float odectene_cislo;
-    float a = GetCoord (starting_row, column);
+    float a = GetValue (starting_row, column);
      
     for (int i = starting_row + 1; i < m_m; i++) {
-        nasobek2 = GetCoord (i, column);
+        nasobek2 = GetValue (i, column);
         for (int j = column; j < m_n; j++) {
-            value = GetCoord (i, j); //d
-            odectene_cislo = GetCoord (starting_row, j);
-            SetCoord (a * value - nasobek2 * odectene_cislo, i, j);
-            changed = true;
+            value = GetValue (i, j); //d
+            odectene_cislo = GetValue (starting_row, j);
+            SetValue (a * value - nasobek2 * odectene_cislo, i, j);
         }
         changes *= a;
     }
@@ -230,13 +229,13 @@ MPtr CMatrix::Inverse() {
     CMatrix * m = new CDense (m_m, 2 * m_n);
     for (int i = 0; i < m_m; i++ ) {
         for (int j = 0; j < m_n; j++) {
-            m->SetCoord (GetCoord (i,j), i ,j);
+            m->SetValue (GetValue (i,j), i ,j);
         }
     }
     for (int i = 0; i < m_m; i++) {
         for (int j = m_n; j < m->m_n; j++) {
-            if (i == j - m_n) m->SetCoord (1, i, j);
-            else m->SetCoord (0, i, j);
+            if (i == j - m_n) m->SetValue (1, i, j);
+            else m->SetValue (0, i, j);
         }
     }
 
@@ -262,9 +261,9 @@ MPtr CMatrix::Inverse() {
                 std::cout << *m << std::endl;
             }
             //making current value is equal to one:
-            if (!Compare (m->GetCoord (cRow, cCol), 1) )
+            if (!Compare (m->GetValue (cRow, cCol), 1) )
             {
-                float factor = 1.0 / m->GetCoord (cRow, cCol);
+                float factor = 1.0 / m->GetValue (cRow, cCol);
                 std::cout << "multiply row " << cRow << " by factor " << factor << std::endl;
                 m->MultRow (cRow, factor);
                 std::cout << *m << std::endl;
@@ -273,13 +272,13 @@ MPtr CMatrix::Inverse() {
             // Column operations:
             for (int rowIndex = cRow + 1; rowIndex < m->m_m; rowIndex ++) 
             {
-                if (!Compare (m->GetCoord (rowIndex, cCol), 0.0 ) ) 
+                if (!Compare (m->GetValue (rowIndex, cCol), 0.0 ) ) 
                 {
                     int rowOneIndex = cCol;
 
-                    float curValue = m->GetCoord (rowIndex, cCol);
+                    float curValue = m->GetValue (rowIndex, cCol);
 
-                    float rowOneValue = m->GetCoord (rowOneIndex, cCol);
+                    float rowOneValue = m->GetValue (rowOneIndex, cCol);
                     
                     if (!Compare (rowOneValue, 0.0) ) {
                         float correctionFactor = - curValue / rowOneValue;
@@ -295,11 +294,11 @@ MPtr CMatrix::Inverse() {
             //Row operations:
 
             for (int colIndex = cCol + 1; colIndex < m_n; colIndex++) {
-                if (!Compare (m->GetCoord(cRow, colIndex), 0.0) ) {
+                if (!Compare (m->GetValue(cRow, colIndex), 0.0) ) {
                     int rowOneIndex = colIndex;
 
-                    float curValue = m->GetCoord (cRow, colIndex);
-                    float rowOneValue = m->GetCoord (rowOneIndex, colIndex);
+                    float curValue = m->GetValue (cRow, colIndex);
+                    float rowOneValue = m->GetValue (rowOneIndex, colIndex);
 
                     if (!Compare (rowOneValue, 0.0) ) {
                         float correctionFactor = - curValue / rowOneValue;
@@ -329,11 +328,11 @@ MPtr CMatrix::Inverse() {
 }
 //----------------------------------------------------------------------------
 int CMatrix::FindMaxValInCol (int col, int starting_row) const {
-    float max = GetCoord (starting_row, col);
+    float max = GetValue (starting_row, col);
     float cur;
     int maxRow = starting_row;
     for (int i = starting_row; i < m_m; i++) {
-        cur = GetCoord (i, col);
+        cur = GetValue (i, col);
         if (cur > max) maxRow = i;
     }
         
@@ -343,24 +342,24 @@ int CMatrix::FindMaxValInCol (int col, int starting_row) const {
 void CMatrix::MultRow (int row, float factor) {
     float value;
     for (int j = 0; j < m_n; j++) {
-        value = GetCoord (row, j);
-        SetCoord (factor * value, row, j);
+        value = GetValue (row, j);
+        SetValue (factor * value, row, j);
     }
 }
 //----------------------------------------------------------------------------
 void CMatrix::MultAdd (int i, int j, float factor) {
     float value;
     for (int k = 0; k < m_n; k++){
-        value = GetCoord (j,k) * factor;
-        SetCoord (GetCoord (i,k) + value, i,k);
+        value = GetValue (j,k) * factor;
+        SetValue (GetValue (i,k) + value, i,k);
     }
 }
 //----------------------------------------------------------------------------
 bool CMatrix::leftHalfIsId () const {
     for (int i = 0; i < m_m; i++) { 
         for (int j = 0; j < m_m; j++) {
-            if (i == j && !Compare (GetCoord(i,j), 1)) return false;
-            if (i != j && !Compare (GetCoord(i,j), 0)) return false;
+            if (i == j && !Compare (GetValue(i,j), 1)) return false;
+            if (i != j && !Compare (GetValue(i,j), 0)) return false;
         }
     }
     return true;
@@ -371,16 +370,22 @@ float CMatrix::Determinant () {
     auto gemmed = GEM ();
     float det = 1;
     for (int i = 0, j = 0; i < m_m; i++, j++)
-        det *= gemmed.first->GetCoord(i,j);
+        det *= gemmed.first->GetValue(i,j);
 
     return det / gemmed.second;
 }
 //----------------------------------------------------------------------------
 std::istream & operator >> (std::istream & in, std::shared_ptr<CMatrix> & matrix){
+    /*
+        matrix has format : '[ ... ; ... ... ; ... ]
+    */
     std::string str;
-    getline (in, str, ']');
-    if (in.bad() ) throw WrongDimensions ();
-    str += '[';
+    char c;
+    do {
+        in.read (&c, sizeof(char));
+        str.push_back (c);
+    } while (! (c == ']'  || in.eof() || in.bad()) );
+    if (in.fail() ) throw WrongFormat ();
     if ( ShouldBeDense (str) ) {
         matrix = std::make_shared<CDense> ();
     } else {
@@ -395,27 +400,23 @@ std::istream & operator >> (std::istream & in, std::shared_ptr<CMatrix> & matrix
 //----------------------------------------------------------------------------
 void CMatrix::ReadSize (std::string & src) {
     std::istringstream is (src);
-    int cnt_n = 0;
-    int cnt_m = 1;
+    m_m = 1;
     float temp;
     char c;
     is >> c;
     //finding how many columns matrix has: 
     do {
         if ( ! (is >> temp) ) break;
-        cnt_n++;
+        m_n++;
     } while ( !is.eof() );
     //finding how many rows it has:
     long unsigned int i = 0;
     do {
         if (src[i] == ';')
-            cnt_m ++; 
+            m_m ++; 
         i++;
     } while (i != src.size() - 1);
-    std::cout << "matrix has " << cnt_m << " rows and " << cnt_n << " columns\n";
-
-    m_n = cnt_n;
-    m_m = cnt_m;
+    // std::cout << "matrix has " << cnt_m << " rows and " << cnt_n << " columns\n";
 }
 //----------------------------------------------------------------------------
 bool CMatrix::IsSet (void) const {
@@ -423,20 +424,24 @@ bool CMatrix::IsSet (void) const {
 }
 //----------------------------------------------------------------------------
 std::ostream & operator << (std::ostream & out, const CMatrix & matrix){
+    //if it's float
     if (!matrix.is_matrix) {
-        out << matrix.GetCoord(0,0);
+        out << matrix.GetValue(0,0);
         return out;
     }
+
     for (int i = 0; i < matrix.m_m; i++ ) {
         for (int j = 0; j < matrix.m_n; j++) {
             if (!j) out << '(';
-            out << std::fixed << std::setprecision(2) << matrix.GetCoord (i,j);
+            out << std::setw(4) << std::fixed << std::setprecision(2) << matrix.GetValue (i,j);
             if (j != matrix.m_n - 1) out << ' ';
             else out << ')';
         }
         if (i != matrix.m_m - 1)
             out <<  std::endl;
     }
+    if (dynamic_cast <const CSparse*> (&matrix) )
+    out << "(sparse)";
     return out;
 }
 //----------------------------------------------------------------------------
@@ -447,6 +452,7 @@ bool ShouldBeDense (const std::string & src) {
     float v; char c;
     std::istringstream is (src);
     while ( is.good() ) {
+        //if float can't be read, then stream has char as next value or eof
         if (!(is >> v)) {
             if (is.fail()) is.clear();
             if (is >> c) continue;
@@ -455,8 +461,6 @@ bool ShouldBeDense (const std::string & src) {
         cntAll++;
         if (v != 0) cntNotZero++;
     }
-    // cout << "number of characters is " << cntAll << endl;
-    // cout << "number of non-zero characters is " << cntNotZero << endl;
     if (cntNotZero * 3 < cntAll) return false;
     return true;
 }
@@ -464,8 +468,7 @@ bool ShouldBeDense (const std::string & src) {
 bool ProductShouldBeDense (const CMatrix & left, const CMatrix & right, char op) {
     int cntNotZero;
     if (op == '+' || op == '-') cntNotZero = CountSum (left, right, op);
-    else if (op == '*') cntNotZero = CountProduct     (left, right);
-    std::cout << "number of non-zero numbers is " << cntNotZero << std::endl;
+    else if (op == '*') cntNotZero = CountMult        (left, right);
     if (cntNotZero * 3 < left.m_n * right.m_m) return false;
     return true;
 }
@@ -474,20 +477,25 @@ bool MergeShouldBeDense (const CMatrix & left, const CMatrix & right) {
     int cntNotZero = 0;
     for (int i = 0; i < left.m_m; i++) {
         for (int j = 0; j < left.m_n; j++) {
-            if (left.GetCoord(i,j) != 0) cntNotZero ++;
+            if (left.GetValue(i,j) != 0) cntNotZero ++;
         }
     }
     for (int i = 0; i < right.m_m; i++) {
         for (int j = 0; j < right.m_n; j++) {
-            if (right.GetCoord(i,j) != 0) cntNotZero ++;
+            if (right.GetValue(i,j) != 0) cntNotZero ++;
         }
     }
-    if (cntNotZero * 3 < left.m_m * left.m_n + right.m_n * right.m_m) return false;
+    if (cntNotZero * 3 < left.m_m*left.m_n + right.m_n*right.m_m) return false;
     return true;
 }
 //----------------------------------------------------------------------------
 bool SplitShouldBeDense (const CMatrix & matrix, int m, int n, int c_m, int c_n) {
-    // for (int i = 
+    int cntNotZero = 0;
+    for (int i = c_m; i < m; i++)
+        for (int j = c_n; j < n; j++)
+        if (! Compare(matrix.GetValue (i,j), 0) ) cntNotZero ++;
+
+    if (cntNotZero * 3 < m * n) return false;
     return true;
 }
 //----------------------------------------------------------------------------
@@ -495,21 +503,21 @@ int CountSum (const CMatrix & left, const CMatrix & right, char op) {
     int cnt = 0;
     for (int i = 0; i < left.m_m; i++ ){
         for (int j = 0; j < left.m_n; j++ ) {
-            if (op == '+' && left.GetCoord(i,j) + right.GetCoord(i,j) != 0) cnt++;
-            else if (left.GetCoord(i,j) - right.GetCoord(i,j) != 0) cnt++;
+            if (op == '+' && left.GetValue(i,j) + right.GetValue(i,j) != 0) cnt++;
+            else if (left.GetValue(i,j) - right.GetValue(i,j) != 0) cnt++;
         }
     }
     return cnt;
 }
 //----------------------------------------------------------------------------
-int CountProduct (const CMatrix & left, const CMatrix & right){
+int CountMult (const CMatrix & left, const CMatrix & right){
     int cnt = 0;
     float value;
     for (int i = 0; i < left.m_m; i++ ){
         for (int j = 0; j < right.m_n; j++ ) {
             value = 0;
             for (int k = 0; k < left.m_n; k++) {
-                value += left.GetCoord(i,k) * right.GetCoord(k,j);
+                value += left.GetValue(i,k) * right.GetValue(k,j);
             } 
             if (value != 0) cnt ++;
         }
