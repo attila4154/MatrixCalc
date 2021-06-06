@@ -17,19 +17,17 @@
 
 
 bool ShouldBeDense (const std::string & src);
+bool Compare (float left, float right);
 
 class CMatrix {
   public:
     CMatrix (int m, int n, bool is_matrix);
     virtual float GetValue (int m, int n) const = 0;
     virtual void  SetValue (float value, int m, int n) = 0;
-    friend MPtr operator + (const CMatrix & left, const CMatrix & right);
-    friend MPtr operator - (const CMatrix & left, const CMatrix & right);
-    friend MPtr operator * (const CMatrix & left, const CMatrix & right);
     virtual CMatrix * Clone () const = 0;
     bool IsSet () const;
     //main commands:
-    virtual MPtr Transpose () = 0;
+    virtual MPtr Transpose () const = 0;
     MPtr Inverse();
     std::pair<MPtr, float> GEM ();
     int Rank ();
@@ -39,6 +37,9 @@ class CMatrix {
 
 
     virtual ~CMatrix () {}
+    // friend class CDense;
+    // friend class CSparse;
+    void Read      (std::istream & in );
 
   private:
   // functions used in main methods:
@@ -51,22 +52,24 @@ class CMatrix {
     bool  leftHalfIsId    () const;
     virtual void SwapRows (int row1, int row2) = 0;
 
+
     friend bool ProductShouldBeDense (const CMatrix & left, const CMatrix & right, char op);
-    friend int  CountSum (const CMatrix & left, const CMatrix & right, char op);
-    friend int  CountMult (const CMatrix & left, const CMatrix & right);
-    friend bool MergeShouldBeDense (const CMatrix & left, const CMatrix & right);
-    friend bool SplitShouldBeDense (const CMatrix & matrix, int m, int n, int c_m, int c_n);
+    friend int  CountSum             (const CMatrix & left, const CMatrix & right, char op);
+    friend int  CountMult            (const CMatrix & left, const CMatrix & right);
+    friend bool MergeShouldBeDense   (const CMatrix & left, const CMatrix & right);
+    friend bool SplitShouldBeDense   (const CMatrix & matrix, int m, int n, int c_m, int c_n);
     
 
     friend std::istream & operator >>
      (std::istream & in, std::shared_ptr<CMatrix> & matrix);
     void         ReadSize  (std::string & src );
-    virtual void Read      (std::istream & in ) = 0;
     friend std::ostream & operator << 
      (std::ostream & out, const CMatrix & matrix);
 
   protected:
   //is_matrix is flag if matrix is float value (which is represented as matrix)
+    friend class CCommands;
+    friend class OperatorToken;
     int m_m;
     int m_n;
     bool is_matrix;

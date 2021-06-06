@@ -1,4 +1,3 @@
-#pragma once
 #include "../lib/CApplication.h"
 
 
@@ -124,11 +123,10 @@ void CApplication::Scan (std::istream & in){
     }
 
     std::istringstream is (str);
-    int m, n;
-    ReadSize (is, m, n);
     std::shared_ptr<CMatrix> matrix;
     std::cout << "scanning:" << std::endl;
-    ReadMatrix (std::cin, matrix, m, n);
+    ReadMatrix (std::cin, matrix);
+    // if (std::c.rdbuf()->in_avail() != 0) WrongFormat ("extra parameter after matrix\n");
     //  every matrix is stored as expression with 1 token:
     std::shared_ptr <CExpr> expr = std::make_shared<CExpr> (matrix);
     if (matrices.find (varName) != matrices.end() ) {
@@ -136,26 +134,6 @@ void CApplication::Scan (std::istream & in){
         matrices.erase (varName);
     }
     matrices.emplace (varName, expr);
-}
-//----------------------------------------------------------------------
-void CApplication::ReadMatrix (std::istream & in, MPtr & matrix, int m, int n) {
-    /* 
-        function that reads matrix of given size and stores it as Dense or Sparse matrix 
-        depending on how many 'empty characters' (0) it has                           
-    */
-    std::string buff;
-    do {
-        getline (in, buff);
-    } while (buff.empty() );
-    std::istringstream is (buff);
-
-    if (ShouldBeDense (buff) ) {
-        matrix = std::make_shared <CDense>  (m,n);
-    } else 
-        matrix = std::make_shared <CSparse> (m,n);
-
-    if (!(is >> matrix)) throw WrongFormat();
-    if (is.rdbuf()->in_avail() != 0) throw WrongFormat();
 }
 //----------------------------------------------------------------------
 void CApplication::ReadFromFile(const std::string & in, std::string varName) {
@@ -236,8 +214,8 @@ void CApplication::Gem  (std::istream & in){
     std::string varName = ReadVar (in);
     if (matrices.find (varName) != matrices.end() ) {
         std::cout << "matrix \'" << varName << "\' in row-echelon from is:\n";
-        std::cout << *matrices.find(varName)->second->Evaluate(matrices)
-                                            ->GEM().first << std::endl;
+        std::cout << *CCommands::GEM(*matrices.find(varName)->second->Evaluate(matrices)).first
+                                             << std::endl;
     }
     else throw variable_not_set (varName);
 }
@@ -250,7 +228,7 @@ void CApplication::Transpose (std::istream & in) {
     std::string varName = ReadVar(in);
     if (matrices.count(varName) == 0)
         throw variable_not_set (varName);
-    std::cout << *matrices.find(varName)->second->Evaluate(matrices)->Transpose() 
+    std::cout << *CCommands::Transpose(*matrices.find(varName)->second->Evaluate(matrices))
                                                                    << std::endl;
 }
 //----------------------------------------------------------------------
@@ -262,7 +240,7 @@ void CApplication::Rank (std::istream & in) {
     if (matrices.find(varName) == matrices.end())
         throw variable_not_set (varName);
     auto matrix = (matrices.find(varName)->second->Evaluate(matrices));
-    std::cout << "Rank of matrix \'" << varName << "\' is " << matrix->Rank () << std::endl; 
+    std::cout << "Rank of matrix \'" << varName << "\' is " << CCommands::Rank(*matrix) << std::endl; 
 }
 //----------------------------------------------------------------------
 void CApplication::Inverse (std::istream & in) {
@@ -273,7 +251,7 @@ void CApplication::Inverse (std::istream & in) {
     std::string varName = ReadVar(in);
     if (matrices.find(varName) == matrices.end())
         throw variable_not_set (varName);
-    auto matrix = matrices.find(varName)->second->Evaluate(matrices)->Inverse();
+    auto matrix = CCommands::Inverse (*matrices.find(varName)->second->Evaluate(matrices));
     if (matrix) std::cout << *matrix << std::endl;
     else std::cout << "matrix is singular\n";
 }
@@ -283,7 +261,8 @@ void CApplication::Determinant (std::istream & in) {
     if (matrices.find(varName) == matrices.end())
         throw variable_not_set (varName);
     std::cout << "determinant of \'" << varName << "\' is ";
-    std::cout << matrices.find (varName)->second->Evaluate(matrices)->Determinant() << std::endl;
+    std::cout << CCommands::Determinant(*matrices.find (varName)->second->
+                                        Evaluate(matrices)) << std::endl;
 }
 //----------------------------------------------------------------------
 void CApplication::Help () {

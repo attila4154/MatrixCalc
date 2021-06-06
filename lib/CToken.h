@@ -6,10 +6,10 @@
 #include <queue>
 #include <stack>
 
-#include "CDense.h"
 #include "CMatrix.h"
+#include "CDense.h"
+#include "CSparse.h"
 #include "define.h"
-#include "../src/CDense.cpp"
 
 class CExpr;
 
@@ -53,13 +53,19 @@ class MatrixToken : public Token {
     std::shared_ptr<CMatrix> matrix;
 };
 //=========================================================
-class Operator : public Token {
+class OperatorToken : public Token {
 public:
-    Operator (char sign, int prec);
+    OperatorToken (char sign, int prec);
     void Print (std::ostream & out) const;
     int Precedence ();
     std::shared_ptr<MatrixToken> Calculate 
-    (std::shared_ptr<Token> left, std::shared_ptr<Token> right, CMemory & matrices);
+    (MPtr left, MPtr right, CMemory & matrices);
+    // friend MPtr operator + (const CMatrix & left, const CMatrix & right);
+    MPtr Sum  (const CMatrix & left, const CMatrix & right);
+    MPtr Sub  (const CMatrix & left, const CMatrix & right);
+    MPtr Mult (const CMatrix & left, const CMatrix & right);
+    // friend MPtr operator - (const CMatrix & left, const CMatrix & right);
+    // friend MPtr operator * (const CMatrix & left, const CMatrix & right);
 private:
     char op;
     int precedence;
@@ -79,7 +85,7 @@ class Brackets : public Token {
 class Variable : public Token {
   public:
     Variable              (const std::string & name);
-    MPtr Value            (CMemory & matrices) override; 
+    // MPtr Value            (CMemory & matrices) override; 
     std::string * GetName () override;
     void Print            (std::ostream & out) const;
   private:

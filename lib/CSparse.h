@@ -5,6 +5,7 @@
 #include <iostream>
 #include <algorithm>
 #include <utility>
+#include <iostream>
 
 /*
   CSparse represents sparse matrix
@@ -26,14 +27,14 @@ class CSparse : public CMatrix {
     CSparse (const CSparse & other);
     CMatrix * Clone () const;
 
-    MPtr Transpose ();
+    MPtr Transpose () const;
 
     float GetValue (int m, int n) const ;
     void  SetValue (float value, int m, int n) ;
 
     void  SwapRows (int row1, int row2);
     float RowsMinus (int starting_row, int column);
-    void  Read  (std::istream & in ) ;
+    // void  Read  (std::istream & in ) ;
 
 
     ~CSparse ();

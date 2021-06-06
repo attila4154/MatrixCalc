@@ -1,15 +1,18 @@
 #pragma once 
 
+
 #include "CExpr.h"
-#include "../src/CToken.cpp"
-#include "../src/CExpr.cpp"
+#include "MatrixFunctions.h"
+#include "CMatrixCommands.h"
+// #include "../src/CToken.cpp"
+// #include "../src/CExpr.cpp"
 #include "CDense.h"
 #include "CSparse.h"
 #include "CMatrix.h"
-#include "../src/CMatrix.cpp"
+// #include "../src/CMatrix.cpp"
 #include "CExceptions.h"
-#include "../src/CDense.cpp"
-#include "../src/CSparse.cpp"
+// #include "../src/CDense.cpp"
+// #include "../src/CSparse.cpp"
 #include "define.h"
 
 #include <fstream>
@@ -52,7 +55,6 @@ class CApplication {
     void        Inverse     (std::istream & in);
     void        Determinant (std::istream & in);
     std::string ReadVar     (std::istream & in);
-    void        ReadMatrix  (std::istream & in, MPtr & matrix, int m, int n);
     // void        ReadSize    (std::istream & in, int & m, int & n);
     void        ReadFromFile(const std::string & in, std::string varName);
     void        Help        ();

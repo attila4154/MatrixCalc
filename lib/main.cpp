@@ -1,5 +1,5 @@
 #include "CApplication.h"
-#include "../src/CApplication.cpp"
+// #include "../src/CApplication.cpp"
 
 int main () {
     CApplication app;

@@ -43,7 +43,7 @@ void CSparse::SwapRows (int row1, int row2) {
     }
 }
 //-----------------------------------------------------------------------
-MPtr CSparse::Transpose () {
+MPtr CSparse::Transpose () const {
     std::shared_ptr<CSparse> transposed = std::make_shared<CSparse> (m_n, m_m);
 
     for (auto & v : m_matrix) {
@@ -53,20 +53,20 @@ MPtr CSparse::Transpose () {
     return transposed;
 }
 //-------------------------------------------
-void CSparse::Read  (std::istream & in ) {
-    char character;
-    double value;
-    in >> character; if (character != '[') throw WrongFormat();
-    for (long i = 0; i < m_m; ++i) {
-        for (long j = 0; j < m_n; j++)  
-        {
-            if (!( in >> value)) throw WrongDimensions();
-            SetValue (value, i, j);  
-        }
-        if (i != m_m - 1 && ( (! (in >> character) || character != ';')))
-            throw WrongFormat();
-    } 
-}
+// void CSparse::Read  (std::istream & in ) {
+//     char character;
+//     double value;
+//     in >> character; if (character != '[') throw WrongFormat();
+//     for (long i = 0; i < m_m; ++i) {
+//         for (long j = 0; j < m_n; j++)  
+//         {
+//             if (!( in >> value)) throw WrongDimensions();
+//             SetValue (value, i, j);  
+//         }
+//         if (i != m_m - 1 && ( (! (in >> character) || character != ';')))
+//             throw WrongFormat();
+//     } 
+// }
 //-------------------------------------------
 CSparse::~CSparse () {}
 //-------------------------------------------

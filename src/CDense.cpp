@@ -1,6 +1,5 @@
-#pragma once
-
 #include "../lib/CDense.h"
+
 
 //=======================================================================
 CDense::CDense               (int m, int n) : CMatrix (m,n, true) {
@@ -45,7 +44,7 @@ void CDense::SwapRows (int row1, int row2) {
     std::swap (m_matrix[row1], m_matrix[row2]);
 }
 //-----------------------------------------------------------------------
-MPtr CDense::Transpose () {
+MPtr CDense::Transpose () const {
     std::shared_ptr<CDense> transposed = std::make_shared<CDense> (m_n, m_m);
     for (int i = 0; i < m_m; i++) {
         for (int j = 0; j < m_n; j++) {
@@ -65,24 +64,24 @@ MPtr CDense::Transpose () {
 //     } 
 // }
 //-----------------------------------------------------------------------
-void CDense::Read (std::istream & in) {
-    m_matrix.resize(m_m);
-    m_matrix.reserve(m_m);
+// void CDense::Read (std::istream & in) {
+//     m_matrix.resize(m_m);
+//     m_matrix.reserve(m_m);
     
-    char character;
-    double temp;
-    in >> character; if (character != '[') throw WrongFormat();
-    for (long i = 0; i < m_m; ++i) {
-        for (long j = 0; j < m_n; j++)  
-        {
-            if (!( in >> temp)) throw WrongDimensions();
-            m_matrix[i].push_back(temp);  
-        }
-        if (i != m_m - 1 && ( (! (in >> character) || character != ';')))
-            throw WrongFormat();
-    } 
-    in >> character; if (character != ']') throw WrongFormat();
-}
+//     char character;
+//     double temp;
+//     in >> character; if (character != '[') throw WrongFormat();
+//     for (long i = 0; i < m_m; ++i) {
+//         for (long j = 0; j < m_n; j++)  
+//         {
+//             if (!( in >> temp)) throw WrongDimensions();
+//             m_matrix[i].push_back(temp);  
+//         }
+//         if (i != m_m - 1 && ( (! (in >> character) || character != ';')))
+//             throw WrongFormat();
+//     } 
+//     in >> character; if (character != ']') throw WrongFormat();
+// }
 //-----------------------------------------------------------------------
 CMatrix * CDense::Clone () const {
     return new CDense (*this);

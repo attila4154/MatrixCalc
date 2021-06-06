@@ -1,8 +1,8 @@
-#pragma once
-
 #include "../lib/CExpr.h"
 //================================================================
 void ReadSize (std::istream & in, int & m, int & n);
+//----------------------------------------------------------------
+CExpr::CExpr () = default;
 //----------------------------------------------------------------
 CExpr::CExpr (MPtr matrix) {
     tokens.push_back (std::make_shared<MatrixToken> (matrix));
@@ -63,8 +63,6 @@ int CExpr::TryToReadCommand (std::istream & expression) {
             com = MERGE;
         else if (command == "split" || command == "SPLIT")
             com = SPLIT;
-        else if (command == "gem"   || command == "GEM")
-            com = GEM;
         else if (command == "transpose" || command == "TRANSPOSE")
             com = TRANSPOSE;
         else if (command[0] == '[' || isNumber (command[0]) || isChar(command[0]) || command[0] == '(') ;
@@ -82,19 +80,19 @@ void CExpr::ParseExpr (std::istream & in, CMemory & matrices) {
     std::shared_ptr<Token> token;
     while (in >> c) {
         if      (c == '-')
-            token = std::make_shared<Operator> ('-', 10);
+            token = std::make_shared<OperatorToken> ('-', 10);
         else if (c == '+') 
-            token = std::make_shared<Operator> ('+', 10);
+            token = std::make_shared<OperatorToken> ('+', 10);
         else if (c == '*')
-            token = std::make_shared<Operator> ('*', 20);
+            token = std::make_shared<OperatorToken> ('*', 20);
         else if (c == '/')
-            token = std::make_shared<Operator> ('/', 20);
+            token = std::make_shared<OperatorToken> ('/', 20);
         else if (c == '(' || c == ')') 
             token = std::make_shared<Brackets> (c);
         else if (c == '[') {
             in.putback(c);
             std::shared_ptr<CMatrix> matrix;
-            in >> matrix;
+            ReadMatrix (in, matrix);
             token = std::make_shared<MatrixToken> (matrix);
         }
         else if (isNumber(c)) {
@@ -139,8 +137,8 @@ void CExpr::TurnToRPN (void) {
                 while (!operatorStack.empty()) {
                     std::shared_ptr<Token> o2 = operatorStack.top();
                     if (o2->GetType() == Token::TokenType::Operator &&
-                    std::dynamic_pointer_cast<Operator>(o2)->Precedence() >=
-                    std::dynamic_pointer_cast<Operator>(token)->Precedence() ) {
+                    std::dynamic_pointer_cast<OperatorToken>(o2)->Precedence() >=
+                    std::dynamic_pointer_cast<OperatorToken>(token)->Precedence() ) {
                         outputQueue.push(o2);
                         operatorStack.pop();
                     }
@@ -184,24 +182,15 @@ void CExpr::TurnToRPN (void) {
 void CExpr::ExecuteCommand (int command, std::istream & in, CMemory & matrices) {
     switch (command) {
         case MERGE : {
-            MergeCom (in, matrices);
+            MergeExpr (in, matrices);
             break;
         } 
         case SPLIT : {
-            SplitCom (in, matrices);
-            break;
-        }
-        case GEM : {
-            std::string var;
-            if (!(in >> var) ) throw wrong_command();
-            if (matrices.find (var) == matrices.end()) throw variable_not_set(var);
-            auto matrix = matrices.find(var)->second->Evaluate(matrices);
-            auto gemmed = std::shared_ptr<CMatrix>(matrix->GEM().first);
-            tokens.push_back (std::make_shared <MatrixToken> (gemmed));
+            SplitExpr (in, matrices);
             break;
         }
         case TRANSPOSE : {
-            TransposeCom (in, matrices);
+            TransposeExpr (in, matrices);
             break;
         }
         default :
@@ -209,37 +198,19 @@ void CExpr::ExecuteCommand (int command, std::istream & in, CMemory & matrices) 
     }
 }
 //----------------------------------------------------------------
-void ReadCoord (std::istream & in, int & m, int & n) {
-    /*
-        function that reads coordinates for split command 
-        - format is '[ m, n ]
-    */
-    char c;
-    try {
-        if (!(in >> c) || c != '[') throw ("");
-        if (!(in >> m) || m < 0)    throw ("");
-        if (!(in >> c) || c != ',') throw ("");
-        if (!(in >> n) || n < 0)    throw ("");
-        if (!(in >> c) || c != ']') throw ("");
-    } catch (...) {
-        throw WrongFormat ("could not read coordinates\n");
-    }
-}
-//----------------------------------------------------------------
-void CExpr::MergeCom (std::istream & in, CMemory & matrices) {
+void CExpr::MergeExpr (std::istream & in, CMemory & matrices) {
     std::string var1, var2;
     if (!(in >> var1) || !(in >> var2) ) throw wrong_command();
     if (matrices.find (var1) == matrices.end()) throw variable_not_set (var1);
     if (matrices.find (var2) == matrices.end()) throw variable_not_set (var2);
     auto matrix1 = matrices.find(var1)->second->Evaluate(matrices);
     auto matrix2 = matrices.find(var2)->second->Evaluate(matrices); 
-    std::shared_ptr<CMatrix> merged = Merge (*matrix1, *matrix2);
-    std::cout << *merged << std::endl;
+    std::shared_ptr<CMatrix> merged = CCommands::Merge (*matrix1, *matrix2);
     auto token = std::make_shared<MatrixToken> (merged);
     tokens.push_back (token);
 }
 //---------------------------------------------------------
-void CExpr::SplitCom (std::istream & in, CMemory & matrices) {
+void CExpr::SplitExpr (std::istream & in, CMemory & matrices) {
     std::cout << "splitting" << std::endl;
     std::string var;
     if (!(in >> var) ) throw wrong_command();
@@ -248,11 +219,11 @@ void CExpr::SplitCom (std::istream & in, CMemory & matrices) {
     ReadSize (in, m, n);
     ReadCoord (in, c_m, c_n);
     auto matrix = matrices.find(var)->second->GetMatrix()->Value(matrices);
-    auto splitted = Split (*matrix, m, n, c_m, c_n);
+    auto splitted = CCommands::Split (*matrix, m, n, c_m, c_n);
     tokens.push_back (std::make_shared <MatrixToken> (splitted));
 }
 //---------------------------------------------------------
-void CExpr::TransposeCom (std::istream & in, CMemory & matrices) {
+void CExpr::TransposeExpr (std::istream & in, CMemory & matrices) {
     std::string var;
     if (!(in >> var) ) throw wrong_command();
     if (matrices.find (var) == matrices.end()) throw variable_not_set(var);
@@ -281,8 +252,15 @@ MPtr CExpr::Evaluate (CMemory & matrices) {
             opStack.pop();
             std::shared_ptr<Token> topSecond = opStack.top();
             opStack.pop();
-            opStack.push((std::dynamic_pointer_cast<Operator>(i))
-            ->Calculate(topFirst, topSecond, matrices));
+            MPtr left, right;
+            if (topFirst->GetType() == Token::TokenType::Variable)
+                left = matrices.find (*topFirst->GetName())->second->Evaluate(matrices);
+            else left = topFirst->Value(matrices);
+            if (topSecond->GetType() == Token::TokenType::Variable)
+                right = matrices.find (*topSecond->GetName())->second->Evaluate(matrices);
+            else right = topSecond->Value(matrices);
+            opStack.push((std::dynamic_pointer_cast<OperatorToken>(i))
+            ->Calculate(left, right, matrices));
         }
     }
     if (opStack.size() == 1) 
@@ -320,3 +298,19 @@ std::ostream & operator << (std::ostream & out, const CExpr & expr) {
     return out;
 }
 //================================================================
+void CExpr::ReadCoord (std::istream & in, int & m, int & n) {
+    /*
+        function that reads coordinates for split command 
+        - format is '[ m, n ]
+    */
+    char c;
+    try {
+        if (!(in >> c) || c != '[') throw ("");
+        if (!(in >> m) || m < 0)    throw ("");
+        if (!(in >> c) || c != ',') throw ("");
+        if (!(in >> n) || n < 0)    throw ("");
+        if (!(in >> c) || c != ']') throw ("");
+    } catch (...) {
+        throw WrongFormat ("could not read coordinates\n");
+    }
+}

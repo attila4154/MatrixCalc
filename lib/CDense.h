@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <memory>
+#include <iostream>
 
 #define DensePtr std::shared_ptr<CDense>
 
@@ -28,14 +29,12 @@ class CDense : public CMatrix {
     void SwapRows (int row1, int row2);
     float RowsMinus (int starting_row, int column);
 
-    MPtr Transpose ();
+    MPtr Transpose () const;
 
     // void Print (std::ostream & out) const;
-    void Read  (std::istream & in);
+    // void Read  (std::istream & in);
     ~CDense();
 //-----------------------------------------------------------------
   private:
     std::vector <std::vector <float>> m_matrix;
-    // int m_m;
-    // int m_n;
 };
