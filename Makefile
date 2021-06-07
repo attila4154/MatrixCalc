@@ -1,20 +1,36 @@
 program=makuldan
-GXX=g++
-GFLAGS=-Wall -pedantic -g -fsanitize=address
-all: calculator
+CXX=g++
+CFLAGS=-Wall -pedantic
 
-calculator: compile run clear
+
+SRCDIR=src
+OBJDIR=tmp
+
+_SRC = main.cpp CApplication.cpp CExpr.cpp CMatrix.cpp CDense.cpp CSparse.cpp  CToken.cpp MatrixFunctions.cpp CMatrixCommands.cpp
+_OBJ = $(patsubst %.cpp,%.o,$(_SRC))
+HDR = hdr/CApplication.h hdr/CExpr.h hdr/CMatrix.h hdr/CDense.h hdr/CSparse.h  hdr/CToken.h hdr/MatrixFunctions.h hdr/CMatrixCommands.h
+
+SRC = $(patsubst %,$(SRCDIR)/%,$(_SRC))
+OBJ = $(patsubst %,$(OBJDIR)/%,$(_OBJ))
+
+all: compile doc run clean
+
+doc: $(SRC) $(HDR) Doxyfile
+	doxygen
 
 compile: $(program)
 
 run:
 	./$(program)
 
-$(program): lib/main.cpp src/CApplication.cpp src/CExpr.cpp src/CMatrix.cpp src/CDense.cpp src/CSparse.cpp  src/CToken.cpp src/MatrixFunctions.cpp src/CMatrixCommands.cpp
-	$(GXX) $(GFLAGS) $^ -o $@ 
+$(program): $(OBJ)
+	$(CXX) $^ -o $@ 
 
-run:
-	./$(program)
+$(OBJDIR)/%.o : $(SRCDIR)/%.cpp $(HDR)
+	@mkdir -p $(@D)
+	$(CXX) $(CFLAGS) -c $< -o $@
 
-clear:
-	rm $(program)
+clean:
+	rm -rf $(OBJDIR)
+	rm -f $(program)
+	rm -rf doc
