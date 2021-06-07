@@ -1,6 +1,6 @@
 program=makuldan
 CXX=g++
-CFLAGS=-Wall -pedantic
+CFLAGS=-Wall -pedantic 
 
 
 SRCDIR=src
@@ -8,7 +8,7 @@ OBJDIR=tmp
 
 _SRC = main.cpp CApplication.cpp CExpr.cpp CMatrix.cpp CDense.cpp CSparse.cpp  CToken.cpp MatrixFunctions.cpp CMatrixCommands.cpp
 _OBJ = $(patsubst %.cpp,%.o,$(_SRC))
-HDR = hdr/CApplication.h hdr/CExpr.h hdr/CMatrix.h hdr/CDense.h hdr/CSparse.h  hdr/CToken.h hdr/MatrixFunctions.h hdr/CMatrixCommands.h
+HDR = src/hdr/CApplication.h src/hdr/CExpr.h src/hdr/CMatrix.h src/hdr/CDense.h src/hdr/CSparse.h  src/hdr/CToken.h src/hdr/MatrixFunctions.h src/hdr/CMatrixCommands.h
 
 SRC = $(patsubst %,$(SRCDIR)/%,$(_SRC))
 OBJ = $(patsubst %,$(OBJDIR)/%,$(_OBJ))
@@ -24,7 +24,7 @@ run:
 	./$(program)
 
 $(program): $(OBJ)
-	$(CXX) $^ -o $@ 
+	$(CXX) -g -fsanitize=address $^ -o $@ 
 
 $(OBJDIR)/%.o : $(SRCDIR)/%.cpp $(HDR)
 	@mkdir -p $(@D)
@@ -34,3 +34,5 @@ clean:
 	rm -rf $(OBJDIR)
 	rm -f $(program)
 	rm -rf doc
+
+.PHONY: doc

@@ -1,4 +1,4 @@
-#include "../lib/CMatrix.h"
+#include "hdr/CMatrix.h"
 
 //============================================================================
 CMatrix::CMatrix (int m, int n, bool is_matrix) : m_m (m), m_n (n), is_matrix (is_matrix) {}
@@ -132,7 +132,6 @@ bool ShouldBeDense (const std::string & src) {
         cntAll++;
         if (v != 0) cntNotZero++;
     }
-    std::cout << "cntNotZero is " << cntNotZero << ", cntAll is " << cntAll << std::endl;
     if (cntNotZero * 3 < cntAll) return false;
     return true;
 }
@@ -196,19 +195,32 @@ int CountMult (const CMatrix & left, const CMatrix & right){
     }
     return cnt;
 }
-//
+//----------------------------------------------------------------------------
+void CMatrix::WriteToFile (const std::string & fileName) {
+    std::fstream f (fileName);
+    if (!f.is_open()) throw WrongFormat ("can not open file\n");
+    for (int i = 0; i < m_m; i++) 
+        for (int j = 0; j < m_n; j++) {
+            f << GetValue (i,j);
+            if (j != m_n - 1) f << ' ';
+            else f << '\n';
+        }
+
+
+    f.close();
+}
+//----------------------------------------------------------------------------
 void CMatrix::Read (std::istream & in) {
     float value;
     char c;
-    if (! (in >> c) || c != '[') throw WrongFormat ("no opening brackets\n");
+    if (! (in >> c) || c != '[') throw WrongFormat ("no opening bracket\n");
     for (int i = 0; i < m_m; i++) {
         for (int j = 0; j < m_n; j++) {
             if (!(in >> value)) throw WrongFormat ("error while reading matrix\n");
             SetValue (value, i, j);
-            std::cout << "value is " << value << std::endl;
         }
-        if ((i != m_m - 1) && (! (in >> c) || c != ';')) throw WrongFormat ("12error while reading matrix\n");
+        if ((i != m_m - 1) && (! (in >> c) || c != ';')) throw WrongFormat ("error while reading matrix\n");
     } 
-    if (! (in >> c) || c != ']') throw WrongFormat ("no opening brackets\n");
-    std::cout << "read matrix is " << *this << std::endl;
+    if (! (in >> c) || c != ']') throw WrongFormat ("no closing bracket\n");
 }
+//============================================================================

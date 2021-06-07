@@ -1,4 +1,4 @@
-#include "../lib/CSparse.h"
+#include "hdr/CSparse.h"
 
 //===========================================
 CSparse::CSparse () : CMatrix (0,0, true) {
@@ -52,21 +52,6 @@ MPtr CSparse::Transpose () const {
 
     return transposed;
 }
-//-------------------------------------------
-// void CSparse::Read  (std::istream & in ) {
-//     char character;
-//     double value;
-//     in >> character; if (character != '[') throw WrongFormat();
-//     for (long i = 0; i < m_m; ++i) {
-//         for (long j = 0; j < m_n; j++)  
-//         {
-//             if (!( in >> value)) throw WrongDimensions();
-//             SetValue (value, i, j);  
-//         }
-//         if (i != m_m - 1 && ( (! (in >> character) || character != ';')))
-//             throw WrongFormat();
-//     } 
-// }
 //-------------------------------------------
 CSparse::~CSparse () {}
 //-------------------------------------------

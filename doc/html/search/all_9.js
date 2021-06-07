@@ -1,0 +1,19 @@
+var searchData=
+[
+  ['m_5fm_70',['m_m',['../classCMatrix.html#a9b4dfdf4197ff49306482c32fe00f71b',1,'CMatrix']]],
+  ['m_5fmatrix_71',['m_matrix',['../classCDense.html#a72f94febe061f7d8bfb7cb222e14dd21',1,'CDense::m_matrix()'],['../classCSparse.html#a35e23bb3d0b973f116de77db01497f22',1,'CSparse::m_matrix()']]],
+  ['m_5fn_72',['m_n',['../classCMatrix.html#ac9a0d2450b16662ccc41f101accb3713',1,'CMatrix']]],
+  ['main_73',['main',['../RPN_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4',1,'main():&#160;RPN.cpp'],['../main_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4',1,'main():&#160;main.cpp']]],
+  ['main_2ecpp_74',['main.cpp',['../main_8cpp.html',1,'']]],
+  ['matrices_75',['matrices',['../classCApplication.html#a4b94be189d0eeaf8b237ea3263425f0a',1,'CApplication']]],
+  ['matrix_76',['Matrix',['../classMatrix.html',1,'Matrix'],['../classToken.html#ad80928a0dff686ec8d11da0b5d6944a2afbc5b5ab4ab7437e0455b3444e90a615',1,'Token::MATRIX()'],['../classCToken.html#ac632aa505d42559616422e6f26125b0cad9532873fc47e4f7dede00ff519f2435',1,'CToken::Matrix()'],['../classMatrix.html#a6fe0d1a79ac990201ed5dd153a9094ca',1,'Matrix::Matrix()'],['../classCMatrixToken.html#a73d3d95cd4127db1fe104012f9da242b',1,'CMatrixToken::matrix()'],['../classMatrix.html#a5b12392731544e64189d102b9100c46a',1,'Matrix::matrix()']]],
+  ['matrixfunctions_2ecpp_77',['MatrixFunctions.cpp',['../MatrixFunctions_8cpp.html',1,'']]],
+  ['matrixfunctions_2eh_78',['MatrixFunctions.h',['../MatrixFunctions_8h.html',1,'']]],
+  ['merge_79',['MERGE',['../classCExpr.html#a467efe2ecd2815245afe8733b95defb6abd589d1808f794dbfbc99ba0c9cb3953',1,'CExpr::MERGE()'],['../classCMatrix.html#ac0a49bcaf0bb564349930f6a4b5af69e',1,'CMatrix::Merge()'],['../structCCommands.html#a45f1da6705821b5ae3fe1b117ca67bfa',1,'CCommands::Merge()']]],
+  ['mergeexpr_80',['MergeExpr',['../classCExpr.html#ac4f0ccdcfd0330b1a75073f652ff809d',1,'CExpr']]],
+  ['mergeshouldbedense_81',['MergeShouldBeDense',['../classCMatrix.html#ac9f3331ebbb42db5ad6b70f372191c98',1,'CMatrix::MergeShouldBeDense()'],['../CMatrix_8cpp.html#ac9f3331ebbb42db5ad6b70f372191c98',1,'MergeShouldBeDense():&#160;CMatrix.cpp']]],
+  ['mptr_82',['MPtr',['../CMatrix_8h.html#a18ba18b805871ecf68756cf13f8ec3da',1,'CMatrix.h']]],
+  ['mult_83',['Mult',['../classCOperatorToken.html#a9ef6f6f91cb478686d6a3974c0792a15',1,'COperatorToken']]],
+  ['multadd_84',['MultAdd',['../classCMatrix.html#aa884bde3dbd8c73da6ba6d4d36f4cc10',1,'CMatrix']]],
+  ['multrow_85',['MultRow',['../classCMatrix.html#af479de06f11eebb3aab383b5f622d630',1,'CMatrix']]]
+];

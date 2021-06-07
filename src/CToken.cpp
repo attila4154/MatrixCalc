@@ -1,27 +1,28 @@
-#include "../lib/CToken.h"
-
+#include "hdr/CToken.h"
 //=================
 //   CToken class:
 //=================
-        Token::Token   (int t) : type (t) {}
+        CToken::CToken   (int t) : type (t) {}
 //-------------------------------------------------------------
-int     Token::GetType (void) const 
+int     CToken::GetType (void) const 
 {
   return type;
 } 
 //-------------------------------------------------------------
-std::string * Token::GetName () {
-    // overrided only by variable class
+std::string * CToken::GetName () {
     return nullptr;
 }
 //-------------------------------------------------------------
-MPtr Token::Value (CMemory & matrices) 
+MPtr CToken::Value () 
 {
-    // overrided by variable and matrix classes
     return nullptr;
 }
 //-------------------------------------------------------------
-std::ostream & operator << (std::ostream & out, const Token & t) { 
+int CToken::Precedence () const {
+    return 0;
+}
+//-------------------------------------------------------------
+std::ostream & operator << (std::ostream & out, const CToken & t) { 
     t.Print(out); return out;
 }
 //-------------------------------------------------------------
@@ -29,22 +30,22 @@ std::ostream & operator << (std::ostream & out, const Token & t) {
 //   Matrix class:
 //=================
 //-------------------------------------------------------------
-MatrixToken::MatrixToken (std::shared_ptr<CMatrix> m) : 
-        Token (Token::TokenType::MATRIX), matrix (m) {}
+CMatrixToken::CMatrixToken (std::shared_ptr<CMatrix> m) : 
+        CToken (TokenType::Matrix), matrix (m) {}
 //-------------------------------------------------------------
 //            float number constructor
-MatrixToken::MatrixToken (float number) : Token (Token::TokenType::Number) {
+CMatrixToken::CMatrixToken (float number) : CToken (TokenType::Number) {
     matrix = std::make_shared<CDense>(number);
 }
 //-------------------------------------------------------------
-MatrixToken::MatrixToken (CMatrix * m) : Token (Token::TokenType::MATRIX),
+CMatrixToken::CMatrixToken (CMatrix * m) : CToken (TokenType::Matrix),
                                  matrix (std::shared_ptr <CMatrix> (m) ) {}
 //-------------------------------------------------------------
-MPtr MatrixToken::Value (CMemory & matrices) {
+MPtr CMatrixToken::Value () {
     return matrix;
 }
 //-------------------------------------------------------------
-void MatrixToken::Print (std::ostream & out) const {
+void CMatrixToken::Print (std::ostream & out) const {
     out << *matrix.get();
 }
 //-------------------------------------------------------------
@@ -52,17 +53,18 @@ void MatrixToken::Print (std::ostream & out) const {
 //    Operator class:
 //====================
 //-------------------------------------------------------------
-OperatorToken::OperatorToken (char sign, int prec) :
-    Token (Token::TokenType::Operator), op(sign), precedence(prec) {}
+COperatorToken::COperatorToken (char sign, int prec) :
+    CToken (TokenType::Operator), op(sign), precedence(prec) {}
 //-------------------------------------------------------------
-void OperatorToken::Print (std::ostream & out) const {
+void COperatorToken::Print (std::ostream & out) const {
     out << op;
 }
 //-------------------------------------------------------------
-int OperatorToken::Precedence () {
+int COperatorToken::Precedence () const {
     return precedence;
 }
-MPtr OperatorToken::Sum (const CMatrix & left, const CMatrix & right) {
+//-------------------------------------------------------------
+MPtr COperatorToken::Sum (const CMatrix & left, const CMatrix & right) {
     if (!left.is_matrix) {
         if (!right.is_matrix) {
             return (std::make_shared<CDense> (left.GetValue(0,0) + right.GetValue(0,0)));
@@ -70,8 +72,8 @@ MPtr OperatorToken::Sum (const CMatrix & left, const CMatrix & right) {
         else throw WrongFormat("cannot sum by number\n");
     }
     if (!right.is_matrix) throw WrongFormat("cannot sum by number\n");
-    if (left.m_m != right.m_m || left.m_n != right.m_n) throw WrongDimensions (left.m_m, left.m_n,
-                                                                              right.m_m, right.m_n);  
+    // std::cout << "left matrix is " left.m_m
+    if (left.m_m != right.m_m || left.m_n != right.m_n) throw WrongDimensions ();  
     std::shared_ptr<CMatrix> temp;
     if ( ProductShouldBeDense (left, right, '+') )
         temp = std::make_shared<CDense>  (left.m_m, left.m_n);
@@ -87,20 +89,20 @@ MPtr OperatorToken::Sum (const CMatrix & left, const CMatrix & right) {
     return (temp);
 }
 //-------------------------------------------------------------
-std::shared_ptr<MatrixToken> OperatorToken::Calculate 
+std::shared_ptr<CMatrixToken> COperatorToken::Calculate 
 (MPtr right, MPtr left, CMemory & matrices) {
     /*
         returns shared pointer on CMatrix of product of 2 matrices / variables
         - for variables finds value first
     */
-    if (op == '+') return std::make_shared<MatrixToken> (Sum (*left, *right));
-    if (op == '-') return std::make_shared<MatrixToken> (Sub (*left, *right));
-    if (op == '*') return std::make_shared<MatrixToken> (Mult(*left, *right));
+    if (op == '+') return std::make_shared<CMatrixToken> (Sum (*left, *right));
+    if (op == '-') return std::make_shared<CMatrixToken> (Sub (*left, *right));
+    if (op == '*') return std::make_shared<CMatrixToken> (Mult(*left, *right));
     
     throw ("");
 }
 //-------------------------------------------------------------
-MPtr OperatorToken::Sub (const CMatrix & left, const CMatrix & right) {
+MPtr COperatorToken::Sub (const CMatrix & left, const CMatrix & right) {
     if (!left.is_matrix) {
         if (!right.is_matrix) {
             return std::make_shared<CDense> (left.GetValue(0,0) - right.GetValue(0,0));
@@ -124,7 +126,7 @@ MPtr OperatorToken::Sub (const CMatrix & left, const CMatrix & right) {
     return temp;
 }
 // //----------------------------------------------------------------------------
-MPtr OperatorToken::Mult (const CMatrix & left, const CMatrix & right) {
+MPtr COperatorToken::Mult (const CMatrix & left, const CMatrix & right) {
     if (!left.is_matrix) {
         if (!right.is_matrix) {
             return std::make_shared<CDense> (left.GetValue(0,0) * right.GetValue(0,0));
@@ -166,11 +168,11 @@ MPtr OperatorToken::Mult (const CMatrix & left, const CMatrix & right) {
 //    Brackets class:
 //====================
 //================---------------------------------------------
-Brackets::Brackets (char b) : 
-    Token    (b == '(' ? TokenType::LeftBracket : TokenType::RightBracket),
-    isLeftBr (b == '(' ? true : false) {}
+CBracketsToken::CBracketsToken (char b) : 
+    CToken    (b == '(' ? TokenType::LeftBracket : TokenType::RightBracket),
+    isLeftBr  (b == '(' ? true : false) {}
 //-------------------------------------------------------------
-void Brackets::Print (std::ostream & out) const {
+void CBracketsToken::Print (std::ostream & out) const {
     // won't be used because expressions in RPN notation do not have paranthesis 
     ;
 }
@@ -179,13 +181,13 @@ void Brackets::Print (std::ostream & out) const {
 //   Variable class:
 //===================
 //-------------------------------------------------------------
-Variable::Variable (const std::string & name) : Token (TokenType::Variable), varName(name) {}
+CVariableToken::CVariableToken (const std::string & name) : CToken (TokenType::Variable), varName(name) {}
 //-------------------------------------------------------------
-std::string * Variable::GetName  () {
+std::string * CVariableToken::GetName  () {
     return &varName;
 }
 //-------------------------------------------------------------
-void Variable::Print (std::ostream & out) const {
+void CVariableToken::Print (std::ostream & out) const {
     out << varName;
 }
 //=============================================================

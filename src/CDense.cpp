@@ -1,4 +1,4 @@
-#include "../lib/CDense.h"
+#include "hdr/CDense.h"
 
 
 //=======================================================================
@@ -10,8 +10,6 @@ CDense::CDense               (int m, int n) : CMatrix (m,n, true) {
 }
 //-----------------------------------------------------------------------
 CDense::CDense               () : CMatrix (0,0, true) {
-    // m_matrix.resize(m_m);
-    // m_matrix.reserve(m_m);
 }
 //-----------------------------------------------------------------------
 CDense::CDense (float number) : CMatrix (1, 1, false) {
@@ -36,8 +34,22 @@ float CDense::GetValue (int m, int n) const {
 }   
 //-----------------------------------------------------------------------
 void  CDense::SetValue (float value, int m, int n) {
-    if (m > m_n || n > m_n) throw WrongDimensions();
+    if (m > m_m || n > m_n) throw WrongDimensions();
     m_matrix[m][n] = value;
+}
+//-----------------------------------------------------------------------
+void CDense::ReadRowValue (int row, float value) {
+    if (row >= m_m) {
+        m_m++;
+        m_matrix.resize(m_m);
+    }
+    m_matrix[row].push_back(value);
+}
+//-----------------------------------------------------------------------
+void CDense::SetCols (int columns) {
+    if (columns < 0) 
+        throw std::out_of_range ("number of cols can not be less than zero\n");
+    m_n = columns;
 }
 //-----------------------------------------------------------------------
 void CDense::SwapRows (int row1, int row2) {
@@ -53,35 +65,6 @@ MPtr CDense::Transpose () const {
     }
     return transposed;
 }
-//-----------------------------------------------------------------------
-// void CDense::Print(std::ostream & out) const {
-//     for (size_t i = 0; i < m_matrix.size(); ++i) {
-//         out << '(';
-//         for (size_t j = 0; j < m_matrix[i].size(); j++)  
-//             out << m_matrix[i][j] << (j != m_matrix[i].size() - 1 ? " " : "");
-//         out << ')';
-//         if (i != m_matrix.size() - 1) out << std::endl;
-//     } 
-// }
-//-----------------------------------------------------------------------
-// void CDense::Read (std::istream & in) {
-//     m_matrix.resize(m_m);
-//     m_matrix.reserve(m_m);
-    
-//     char character;
-//     double temp;
-//     in >> character; if (character != '[') throw WrongFormat();
-//     for (long i = 0; i < m_m; ++i) {
-//         for (long j = 0; j < m_n; j++)  
-//         {
-//             if (!( in >> temp)) throw WrongDimensions();
-//             m_matrix[i].push_back(temp);  
-//         }
-//         if (i != m_m - 1 && ( (! (in >> character) || character != ';')))
-//             throw WrongFormat();
-//     } 
-//     in >> character; if (character != ']') throw WrongFormat();
-// }
 //-----------------------------------------------------------------------
 CMatrix * CDense::Clone () const {
     return new CDense (*this);

@@ -1,12 +1,6 @@
-#include "../lib/CMatrixCommands.h"
+#include "hdr/CMatrixCommands.h"
 
 //=============================================================
-// bool CCommands::Compare (float left, float right) {
-//     //compare if left value is equal to right one:
-//     // return left == right;
-//     return (fabs (left - right) <= 0.00001); 
-// }
-//-------------------------------------------------------------
 MPtr CCommands::Inverse (const CMatrix & matrix){
     if (matrix.m_n != matrix.m_m) throw WrongFormat ("matrix is not square\n");
     CMatrix * m = new CDense (matrix.m_m, 2 * matrix.m_n);
@@ -27,8 +21,6 @@ MPtr CCommands::Inverse (const CMatrix & matrix){
     int count = 0;
     bool complete = false;
 
-    std::cout << "from:\n" << *m << std::endl;
-
     while ((!complete) && (count < maxCount)) 
     {
         for (int diagIdx = 0; diagIdx < m->m_m; diagIdx++) 
@@ -39,17 +31,17 @@ MPtr CCommands::Inverse (const CMatrix & matrix){
             int maxIdx = m->FindMaxValInCol (cCol, cRow);
 
             if (maxIdx != cRow) {
-                std::cout << "swap rows: " << cRow << ',' << maxIdx << std::endl;
+                // std::cout << "swap rows: " << cRow << ',' << maxIdx << std::endl;
                 m->SwapRows (cRow, maxIdx);
-                std::cout << *m << std::endl;
+                // std::cout << *m << std::endl;
             }
             //making current value equal to one:
             if (!Compare (m->GetValue (cRow, cCol), 1) )
             {
                 float factor = 1.0 / m->GetValue (cRow, cCol);
-                std::cout << "multiply row " << cRow << " by factor " << factor << std::endl;
+                // std::cout << "multiply row " << cRow << " by factor " << factor << std::endl;
                 m->MultRow (cRow, factor);
-                std::cout << *m << std::endl;
+                // std::cout << *m << std::endl;
             }
 
             // Column operations:
@@ -66,9 +58,9 @@ MPtr CCommands::Inverse (const CMatrix & matrix){
                     if (!Compare (rowOneValue, 0.0) ) {
                         float correctionFactor = - curValue / rowOneValue;
                         m->MultAdd (rowIndex, rowOneIndex, correctionFactor); 
-                        std::cout << "multiply row " << rowOneIndex << " by " << correctionFactor <<
-                        " and add to row " << rowIndex << std::endl;
-                        std::cout << *m << std::endl;
+                        // std::cout << "multiply row " << rowOneIndex << " by " << correctionFactor <<
+                        // " and add to row " << rowIndex << std::endl;
+                        // std::cout << *m << std::endl;
                     }
 
                 }
@@ -86,17 +78,15 @@ MPtr CCommands::Inverse (const CMatrix & matrix){
                     if (!Compare (rowOneValue, 0.0) ) {
                         float correctionFactor = - curValue / rowOneValue;
                         m->MultAdd (cRow, rowOneIndex, correctionFactor);
-                        std::cout << "multiply row " << rowOneIndex << " by " << correctionFactor <<
-                        " and add to row " << cRow << std::endl;
-                        std::cout << *m << std::endl;
+                        // std::cout << "multiply row " << rowOneIndex << " by " << correctionFactor <<
+                        // " and add to row " << cRow << std::endl;
+                        // std::cout << *m << std::endl;
                     }
                 }  
             }
         }   
             if (m->leftHalfIsId() ) {
                 complete = true;
-                std::cout << *m << std::endl;
-                std::cout << "matrix is inversed\n";
             }
         count++;
     }
@@ -142,7 +132,6 @@ std::pair<MPtr, float> CCommands::GEM     (const CMatrix & matrix){
             k++; l++;
         }
     }
-    // std::cout << "changes are " << changes << std::endl;
     std::pair<MPtr, float> gemmed (temp, changes);
     return gemmed;
 }

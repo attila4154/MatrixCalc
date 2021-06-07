@@ -1,4 +1,43 @@
-asdjflk j
-asdf hsadfs klfdj a
-skdfjl ;lsjkd f
-some text
+-----------------------------
+MAIN COMMANDS
+    scan v  (-f fileName)
+    print v (-f fileName)
+    gem v
+    transpose v
+    evaluate v
+    inverse v
+    rank v
+    determinant v
+    delete v
+where v = variable name (1 character only)
+    clear (calls bash's clear)
+-----------------------------
+COMMANDS THAT SET VARIABLES
+    v = ... (maths expression)
+    v1 = merge v2 v3
+    v1 = split v2 (m,n) [c_m, c_n] where m x n = size of splitted matrix;
+                                     c_m, c_n = coordinates from where to splitted
+    v1 = transpose v2
+    v1 = inverse v2
+-----------------------------
+MATRIX SYNTAX
+    matrix = [a b c ... ; m n k ... ; ... ; ... ]
+        where a,b,c are numbers with floating point (kept as floats)
+    '[' and ']' are necessary
+    the only delimeter between rows is ';'
+    if number of columns in different rows does not match, matrix won't be read
+-----------------------------
+MATHEMATICAL EXPRESSIONS    
+    this calculator can evaluate basic matrix operations such as 
+    matrix + matrix, matrix * matrix , matrix - matrix,
+    number * matrix, number * number, number - number 
+    it also supports parenthesis and variables
+    meaning that expressions with variables can be evaluated differently 
+    depending on current value of variable in memory
+-----------------------------
+VARIABLES
+    variables can be both number and matrix
+-----------------------------
+EXIT
+    to exit press ':q!'
+    nah, it's just 'exit' or 'ctrl+d' (end of input)

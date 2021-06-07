@@ -1,11 +1,7 @@
-#include "../lib/MatrixFunctions.h"
+#include "hdr/MatrixFunctions.h"
 
+//----------------------------------------------------------------------
 void ReadMatrix (std::istream & in, MPtr & matrix) {
-    /* 
-        function that reads matrix of given size and stores it as Dense or Sparse matrix 
-        depending on how many 'empty characters' (0) it has                           
-    */
-
     std::string str;
     char c;
     if (!(in >> c) || c != '[') throw WrongFormat ();
@@ -22,10 +18,6 @@ void ReadMatrix (std::istream & in, MPtr & matrix) {
 }
 //----------------------------------------------------------------------
 void SetMatrixSize (MPtr & matrix, const std::string & src) {
-    /*  
-        function that decides whether matrix should be dense or sparse
-        and sets its size
-    */
     std::istringstream is (src);
     int cntAll = 0, cntNotZero = 0, m = 1, n = 0;
     float v; char c;
@@ -44,33 +36,35 @@ void SetMatrixSize (MPtr & matrix, const std::string & src) {
         if (m < 2) n++;
         if (v != 0) cntNotZero++;
     }
-    std::cout << "cntNotZero is " << cntNotZero << ", cntAll is " << cntAll << std::endl;
-    std::cout << "size is " << m << "," << n << std::endl;
     if (cntNotZero * 3 < cntAll) matrix = std::make_shared<CSparse> (m,n); 
     else matrix = std::make_shared<CDense> (m,n);
 }
 //----------------------------------------------------------------------
-// void SetMatrixSize (MPtr & matrix, std::istream & in) {
-//     int cntAll = 0, cntNotZero = 0, m = 1, n = 0;
-//     float v; char c;
-//     while ( in.good() ) {
-//         //if float can't be read, then stream has char as next value or eof
-//         if (!(in >> v)) {
-//             if (in.fail()) is.clear();
-//             if (in >> c) {
-//                 if (c == ';') m++;
-//                 continue;
-//             }
-//             else break;
-//         }
-//         cntAll++;
-//         // while reading first row, count how many columns
-//         if (m < 2) n++;
-//         if (v != 0) cntNotZero++;
-//     }
-//     // std::cout << "cntNotZero is " << cntNotZero << ", cntAll is " << cntAll << std::endl;
-//     // std::cout << "size is " << m << "," << n << std::endl;
-//     if (cntNotZero * 3 < cntAll) matrix = std::make_shared<CSparse> (m,n); 
-//     else matrix = std::make_shared<CDense> (m,n);
-// }
+void ReadCoord (std::istream & in, int & m, int & n) { 
+    //- format is '[ m, n ]
+    char c;
+    try {
+        if (!(in >> c) || c != '[') throw ("");
+        if (!(in >> m) || m < 0)    throw ("");
+        if (!(in >> c) || c != ',') throw ("");
+        if (!(in >> n) || n < 0)    throw ("");
+        if (!(in >> c) || c != ']') throw ("");
+    } catch (...) {
+        throw WrongFormat ("could not read coordinates\n");
+    }
+}
+//----------------------------------------------------------------------
+void ReadSize (std::istream & in, int & m, int & n) {
+    // size has format '( m , n )'
+    char c;
+    try {
+        in >> c; if (c != '(') throw ("");
+        in >> m;  
+        in >> c; if (c != ',') throw ("");
+        in >> n;
+        in >> c; if (c != ')') throw ("");
+    } catch (...) {
+        throw WrongFormat ("could not read matrix size\n");
+    }
+}
 //----------------------------------------------------------------------

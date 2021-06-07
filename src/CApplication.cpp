@@ -1,9 +1,8 @@
-#include "../lib/CApplication.h"
+#include "hdr/CApplication.h"
 
 
 //=======================================================================
 void CApplication::Execute (std::istream & in) {
-    /* main method that reads and executes commands from user */
     std::string str; 
     do {
         std::cout << "> ";
@@ -20,7 +19,9 @@ void CApplication::Execute (std::istream & in) {
 int CApplication::GetCommand (std::istream & in) {
     std::string command;
     getline (in, command, ' ');
+    if (command == "CLEAR"     || command == "clear")     return commands::CLEAR;
     if (command == "PRINT"     || command == "print")     return commands::PRINT;
+    if (command == "DELETE"    || command == "delete")    return commands::DELETE;
     if (command == "GEM"       || command == "gem")       return commands::GEM;
     if (command == "SCAN"      || command == "scan")      return commands::SCAN;
     if (command == "EXIT"      || command == "exit")      return commands::EXIT;
@@ -29,7 +30,8 @@ int CApplication::GetCommand (std::istream & in) {
     if (command == "rank"      || command == "RANK")      return commands::RANK;
     if (command == "inverse"   || command == "INVERSE")   return commands::INVERSE;
     if (command == "help"      || command == "HELP")      return commands::HELP;
-    if (command =="determinant"|| command == "DETERMINANT")   return commands::DETERMINANT;
+    if (command =="determinant" || command == "DETERMINANT")
+                                                          return commands::DETERMINANT;
     else {
         //if it's not any of the basic commands, try to read as expression:
         char temp;
@@ -88,6 +90,14 @@ void CApplication::SwitchCommand (std::istream & is, int command, const std::str
             Help ();
             break;
         }   
+        case CLEAR : {
+            system ("clear");
+            break;
+        }
+        case DELETE : {
+            Delete (is);
+            break;
+        }   
         case commands::EXIT : 
             throw exit_exc();
         default:
@@ -97,36 +107,59 @@ void CApplication::SwitchCommand (std::istream & is, int command, const std::str
 //----------------------------------------------------------------------
 std::string CApplication::ReadVar (std::istream & in) {
     std::string var;
-    if (!getline (in, var, ' '))
+    if (!(in >> var) || var == "")
         throw WrongFormat ("could not read variable name\n");
     return var;
 }
 //----------------------------------------------------------------------
 void CApplication::Print (std::istream & in) {
-    /* function that prints out matrix or NOT evaluated expression in RP notation */
     std::string varName = ReadVar(in);
     if (matrices.find (varName) == matrices.end() ) throw variable_not_set (varName);
-    else
-        std::cout << *(matrices.find(varName)->second) << std::endl;
+    std::string flag;
+    if (!in.eof()) {
+        in >> flag;
+        if (flag == "-f") {
+            std::string fileName;
+            if (!in.eof() ) in >> fileName; 
+            if (fileName.empty() ) throw WrongFormat ("no output file\n"); 
+            WriteToFile (varName, fileName);
+            return;
+        }
+        else if (!flag.empty() ) throw WrongFormat ("unknown flag\n");
+    }
+
+    std::cout << *(matrices.find(varName)->second) << std::endl;
+}
+//----------------------------------------------------------------------
+void CApplication::WriteToFile 
+(const std::string & varName, const std::string & fileName) {
+    std::fstream f (fileName);
+    matrices.find(varName)->second->Evaluate(matrices)->WriteToFile (fileName);
 }
 //----------------------------------------------------------------------
 void CApplication::Scan (std::istream & in){
-    /* function that scans matrix of given size from user input or from file
-       allows to rewrite already existing matrix/expression               */
-    
     std::string varName = ReadVar (in);
     std::string str;
-    getline (in, str);
-    if (str[0] == '-' && str[1] == 'f') {
-        ReadFromFile (str, varName);
-        return;
+    
+    std::string flag;
+    if (!in.eof()) {
+        in >> flag;
+        if (flag == "-f") {
+            std::string fileName;
+            if (!in.eof() ) in >> fileName; 
+            if (fileName.empty() ) throw WrongFormat ("no output file\n"); 
+            ReadFromFile (varName, fileName);
+            return;
+        }
+        else if (!flag.empty() ) throw WrongFormat ("unknown flag\n");
     }
 
     std::istringstream is (str);
     std::shared_ptr<CMatrix> matrix;
     std::cout << "scanning:" << std::endl;
     ReadMatrix (std::cin, matrix);
-    // if (std::c.rdbuf()->in_avail() != 0) WrongFormat ("extra parameter after matrix\n");
+    if (!std::cin.eof()) getline (std::cin, str);
+    
     //  every matrix is stored as expression with 1 token:
     std::shared_ptr <CExpr> expr = std::make_shared<CExpr> (matrix);
     if (matrices.find (varName) != matrices.end() ) {
@@ -136,44 +169,51 @@ void CApplication::Scan (std::istream & in){
     matrices.emplace (varName, expr);
 }
 //----------------------------------------------------------------------
-void CApplication::ReadFromFile(const std::string & in, std::string varName) {
-    /* 
-        reads matrix with no given size from file as Dense matrix
-    */ 
-    std::string fileName;
-    std::istringstream is (in);
-    is >> fileName; //skipping '-f' characters
-    if (!(is >> fileName) ) throw WrongFormat ("could not read file name\n");
-    if (!is.eof()) throw WrongFormat ("too many arguments\n");
+void CApplication::ReadFromFile (const std::string & varName, const std::string & fileName) {
     std::fstream f (fileName);
-    if (!f.is_open()) {
-        std::cout << "file " << fileName << " does not exist or can not be opened\n";
-        return;
-    }
-    // MPtr matrix = std::make_shared<CDense> ();
+    if (!f.is_open()) throw WrongFormat ("can not open file\n");
+    std::shared_ptr<CDense> matrix = std::make_shared<CDense> (0,1);
     float value;
-    int m = 0, n = 0;
-    std::cout << "read matrix is " << std::endl;
-    
-    while (f >> value ) {
-        std::cout << value;
-        if (!m) n++;
+    int m = 0, cnt_n = 0, n = 0;
+    // reading first row:
+    while (f.peek () != '\n') {
+        if (!(f >> value)) throw WrongFormat ("error while reading matrix\n");
+        matrix->ReadRowValue(m, value);
+        n++;
+    }
+
+    matrix->SetCols (n); 
+    m++;
+
+    while (f >> value) {
+        matrix->ReadRowValue(m, value);
+        cnt_n++;
         if (f.peek() == '\n') {
-            std::cout << std::endl;
+            if (cnt_n > n) throw WrongFormat ("expected less columns\n");
+            else if (cnt_n < n) throw WrongFormat ("expected more columns\n");
+            cnt_n = 0;
             m++;
         }
     }
-    std::cout << "dimensions are " << m << 'x' << n << std::endl;
-     
+    
     f.close();
+
+    if (matrices.find (varName) != matrices.end()) {
+        matrices.erase (varName);
+        std::cout << "matrix \'" << varName << "\' was rewritten" << std::endl;
+    }
+
+    matrices.emplace (varName, std::make_shared<CExpr> (matrix) );
+}
+//----------------------------------------------------------------------
+void CApplication::Delete      (std::istream & in) {
+    std::string varName = ReadVar (in);
+    if (matrices.find(varName) == matrices.end() ) throw variable_not_set (varName);
+    matrices.erase (varName);
+    std::cout << "matrix \'" << varName << "\' was deleted" << std::endl; 
 }
 //----------------------------------------------------------------------
 void CApplication::ReadExpr(std::istream & in) {
-    /*
-        *reads expression from input, parses it to tokens and turn it to RP notation
-        *if expression can be evaluated, evaluates it and keeps in memory as evaluated matrix
-        *if not, keeps it as non-evaluated expression 
-    */
     std::shared_ptr<CExpr> expression = std::make_shared<CExpr> ();
     std::string varName = ReadVar(in);
     expression->ReadExpr (in, matrices);
@@ -195,10 +235,6 @@ void CApplication::ReadExpr(std::istream & in) {
 }
 //----------------------------------------------------------------------
 void CApplication::Evaluate (std::istream & in) {
-    /*
-        evaluates given expression and prints its result out
-        does NOT change original expression
-    */
     std::string varName = ReadVar(in);
     if (matrices.find(varName) == matrices.end())
         throw variable_not_set (varName);
@@ -207,10 +243,6 @@ void CApplication::Evaluate (std::istream & in) {
 }
 //----------------------------------------------------------------------
 void CApplication::Gem  (std::istream & in){
-    /*
-        method that prints out gemmed matrix (or evaluated expression)
-        does not change matrix 
-    */  
     std::string varName = ReadVar (in);
     if (matrices.find (varName) != matrices.end() ) {
         std::cout << "matrix \'" << varName << "\' in row-echelon from is:\n";
@@ -221,10 +253,6 @@ void CApplication::Gem  (std::istream & in){
 }
 //----------------------------------------------------------------------
 void CApplication::Transpose (std::istream & in) {
-    /*
-        function that prints out transposed matrix (or evaluated expression)
-        does not change matrix
-    */
     std::string varName = ReadVar(in);
     if (matrices.count(varName) == 0)
         throw variable_not_set (varName);
@@ -233,9 +261,6 @@ void CApplication::Transpose (std::istream & in) {
 }
 //----------------------------------------------------------------------
 void CApplication::Rank (std::istream & in) {
-    /*
-        function that prints rank of matrix (or evaluated expression) 
-    */
     std::string varName = ReadVar(in);
     if (matrices.find(varName) == matrices.end())
         throw variable_not_set (varName);
@@ -244,10 +269,6 @@ void CApplication::Rank (std::istream & in) {
 }
 //----------------------------------------------------------------------
 void CApplication::Inverse (std::istream & in) {
-    /*
-        prints out inverse of given square matrix or expression
-        unless it's singular
-    */
     std::string varName = ReadVar(in);
     if (matrices.find(varName) == matrices.end())
         throw variable_not_set (varName);
@@ -260,9 +281,10 @@ void CApplication::Determinant (std::istream & in) {
     std::string varName = ReadVar(in);
     if (matrices.find(varName) == matrices.end())
         throw variable_not_set (varName);
+    float det = CCommands::Determinant(*matrices.find (varName)->second->
+                                        Evaluate(matrices));
     std::cout << "determinant of \'" << varName << "\' is ";
-    std::cout << CCommands::Determinant(*matrices.find (varName)->second->
-                                        Evaluate(matrices)) << std::endl;
+    std::cout << det << std::endl;
 }
 //----------------------------------------------------------------------
 void CApplication::Help () {
@@ -272,29 +294,10 @@ void CApplication::Help () {
     //     f.read (&c, sizeof(char));
     //     std::cout.write (&c, sizeof(char));
     // }
-    system ("less help.txt");
-}
-//----------------------------------------------------------------------
-void   ReadSize (std::istream & in, int & m, int & n) {
-    /* function that reads size of matrix for scan function */
-    // size has format '( m , n )'
-    char c;
-    try {
-        in >> c; if (c != '(') throw ("");
-        in >> m;  
-        in >> c; if (c != ',') throw ("");
-        in >> n;
-        in >> c; if (c != ')') throw ("");
-    } catch (...) {
-        throw WrongFormat ("could not read matrix size\n");
-    }
+    system ("less assets/help.txt");
 }
 //----------------------------------------------------------------------
 void CApplication::Run () {
-    /*
-        run function
-        - catches all exceptions that can occur while running the program
-    */
     while (true) {
         try {
             Execute (std::cin);
@@ -309,7 +312,7 @@ void CApplication::Run () {
             std::cout << wf.what();
         } 
         catch (WrongDimensions & wf) {
-            wf.Print(std::cout);
+            std::cout << wf.what();
         } 
         catch (variable_not_set & var) {
             std::cout << "variable " << var.what () << " not set\n";
