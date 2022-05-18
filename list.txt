@@ -1,3 +1,0 @@
-* naive matrix multiplication : 
-    https://helloacm.com/how-to-multiply-two-matrices-in-c/
-*

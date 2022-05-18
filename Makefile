@@ -13,7 +13,7 @@ HDR = src/hdr/CApplication.h src/hdr/CExpr.h src/hdr/CMatrix.h src/hdr/CDense.h 
 SRC = $(patsubst %,$(SRCDIR)/%,$(_SRC))
 OBJ = $(patsubst %,$(OBJDIR)/%,$(_OBJ))
 
-all: compile doc run clean
+all: compile run 
 
 doc: $(SRC) $(HDR) Doxyfile
 	doxygen
